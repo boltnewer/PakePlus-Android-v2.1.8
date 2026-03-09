@@ -19,13 +19,15 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 8px;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
         }
 
         .chat-container {
-            max-width: 950px;
             width: 100%;
-            height: 100%;
+            max-width: 950px;
+            height: 100vh; /* 动态调整 */
             background-color: #f0f2f5;
             border-radius: 28px 28px 12px 12px;
             box-shadow: 0 6px 24px rgba(0,0,0,0.15);
@@ -33,7 +35,7 @@
             flex-direction: column;
             overflow: hidden;
             border: 1px solid rgba(0,0,0,0.05);
-            position: relative;
+            transition: height 0.1s ease;
         }
 
         .chat-header {
@@ -103,7 +105,7 @@
             gap: 12px;
             background: #efeae2;
             background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23efeae2" opacity="0.4"/></svg>');
-            transition: padding-bottom 0.2s ease;
+            -webkit-overflow-scrolling: touch;
         }
 
         .message-row {
@@ -195,7 +197,6 @@
             border-radius: 30px;
         }
 
-        /* 输入区域默认 flex 子元素，键盘弹出时改为 fixed */
         .input-area {
             background: #f0f2f5;
             padding: 12px 16px;
@@ -204,20 +205,7 @@
             gap: 8px;
             border-top: 1px solid #e9edef;
             flex-shrink: 0;
-            transition: transform 0.2s ease, bottom 0.2s ease;
-            z-index: 10;
-            width: 100%;
-        }
-
-        .input-area.fixed-keyboard {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            transform: translateY(-100%);
-            border-radius: 0;
-            max-width: 950px;
-            margin: 0 auto;
+            transition: transform 0.2s ease;
         }
 
         .input-area .voice-btn {
@@ -332,7 +320,7 @@
     </style>
 </head>
 <body>
-<div class="chat-container">
+<div class="chat-container" id="chatContainer">
     <div class="chat-header">
         <h2>
             <i class="fab fa-weixin"></i> 智能挑码助手
@@ -365,7 +353,6 @@
         const STORE_NAME = 'trialStore';
         const KEY = 'firstUseTime';
 
-        // 内存缓存，提高读取速度
         let cachedFirstUseTime = null;
 
         // ---------- IndexedDB 工具 ----------
@@ -407,20 +394,16 @@
             });
         }
 
-        // ---------- 初始化：从 IndexedDB 恢复，并同步到 localStorage ----------
         async function initTrialStorage() {
             try {
                 const idbTime = await getItemFromDB(KEY);
                 const lsTime = localStorage.getItem(KEY);
-
-                // 如果 IDB 有，且 LS 没有，或者 IDB 时间更早（以防用户手动改LS），则以 IDB 为准
                 if (idbTime) {
                     if (!lsTime || parseInt(lsTime) > parseInt(idbTime)) {
                         localStorage.setItem(KEY, idbTime);
                     }
                     cachedFirstUseTime = idbTime;
                 } else if (lsTime) {
-                    // LS 有，IDB 没有，同步到 IDB
                     await setItemToDB(KEY, lsTime);
                     cachedFirstUseTime = lsTime;
                 } else {
@@ -431,11 +414,8 @@
                 cachedFirstUseTime = localStorage.getItem(KEY);
             }
         }
-
-        // 启动初始化（异步，不阻塞后续操作）
         initTrialStorage();
 
-        // ---------- 获取试用信息（同步，使用内存缓存 + localStorage fallback）----------
         function getTrialInfo() {
             let firstUse = cachedFirstUseTime || localStorage.getItem(KEY);
             if (!firstUse) {
@@ -449,14 +429,11 @@
             return { isValid, daysLeft, firstUse, isFirst: false };
         }
 
-        // 激活试用：同时写入 localStorage 和 IndexedDB，并更新缓存
         async function activateTrial() {
-            if (cachedFirstUseTime || localStorage.getItem(KEY)) return; // 已激活
-
+            if (cachedFirstUseTime || localStorage.getItem(KEY)) return;
             const now = Date.now().toString();
             localStorage.setItem(KEY, now);
             cachedFirstUseTime = now;
-
             try {
                 await setItemToDB(KEY, now);
             } catch (e) {
@@ -464,7 +441,7 @@
             }
         }
 
-        // ---------- 原始数据映射（包含新增条件）----------
+        // ---------- 原始数据映射 ----------
         const mapping = {
             '马': [1, 13, 25, 37, 49],
             '蛇': [2, 14, 26, 38],
@@ -479,27 +456,22 @@
             '猴': [11, 23, 35, 47],
             '羊': [12, 24, 36, 48]
         };
-
         const redNumbers = [1,2,7,8,12,13,18,19,23,24,29,30,34,35,40,45,46];
         const blueNumbers = [3,4,9,10,14,15,20,25,26,31,36,37,41,42,47,48];
         const greenNumbers = [5,6,11,16,17,21,22,27,28,32,33,38,39,43,44,49];
-
         const homeAnimals = [1,6,8,9,10,12,13,18,20,21,22,24,25,30,32,33,34,36,37,42,44,45,46,48,49];
         const wildAnimals = [2,3,4,5,7,11,14,15,16,17,19,23,26,27,28,29,31,35,38,39,40,41,43,47];
         const skyAnimals = [1,3,4,6,8,11,13,15,16,18,20,23,25,27,28,30,32,35,37,39,40,42,44,47,49];
         const earthAnimals = [2,5,7,9,10,12,14,17,19,21,22,24,26,29,31,33,34,36,38,41,43,45,46,48];
-
         const hedans = [1,3,5,7,9,10,12,14,16,18,21,23,25,27,29,30,32,34,36,38,41,43,45,47,49];
         const hesuangs = [2,4,6,8,11,13,15,17,19,20,22,24,26,28,31,33,35,37,39,40,42,44,46,48];
         const hedas = [7,8,9,16,17,18,19,25,26,27,28,29,34,35,36,37,38,39,43,44,45,46,47,48,49];
         const hexiaos = [1,2,3,4,5,6,10,11,12,13,14,15,20,21,22,23,24,30,31,32,33,40,41,42];
-
         const wujins = [4,5,12,13,26,27,34,35,42,43];
         const wumus = [8,9,16,17,24,25,38,39,46,47];
         const wushuis = [1,14,15,22,23,30,31,44,45];
         const wuhuos = [2,3,10,11,18,19,32,33,40,41,48,49];
         const wutus = [6,7,20,21,28,29,36,37];
-
         const duanNumbers = {
             '1': [1,2,3,4,5,6,7],
             '2': [8,9,10,11,12,13,14],
@@ -509,12 +481,10 @@
             '6': [36,37,38,39,40,41,42],
             '7': [43,44,45,46,47,48,49]
         };
-
         const sizeNumbers = {
             '大': [25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49],
             '小': [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]
         };
-
         const tailNumbers = {
             '尾0': [10,20,30,40],
             '尾1': [1,11,21,31,41],
@@ -527,7 +497,6 @@
             '尾8': [8,18,28,38,48],
             '尾9': [9,19,29,39,49]
         };
-
         const headNumbers = {
             '头0': [1,2,3,4,5,6,7,8,9],
             '头1': [10,11,12,13,14,15,16,17,18,19],
@@ -535,35 +504,28 @@
             '头3': [30,31,32,33,34,35,36,37,38,39],
             '头4': [40,41,42,43,44,45,46,47,48,49]
         };
-
         const oddEvenNumbers = {
             '单': [1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43,45,47,49],
             '双': [2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48]
         };
 
-        // 新增映射条件
         const genderMale = [1,3,5,6,7,9,11,13,15,17,18,19,21,23,25,27,29,30,31,33,35,37,39,41,42,43,45,47,49];
         const genderFemale = [2,4,8,10,12,14,16,20,22,24,26,28,32,34,36,38,40,44,46,48];
-
         const spring = [3,4,5,15,16,17,27,28,29,39,40,41];
         const summer = [1,2,12,13,14,24,25,26,36,37,38,48,49];
         const autumn = [9,10,11,21,22,23,33,34,35,45,46,47];
         const winter = [6,7,8,18,19,20,30,31,32,42,43,44];
-
         const wind = [3,4,5,15,16,17,27,28,29,39,40,41];
         const rain = [6,7,8,18,19,20,30,31,32,42,43,44];
         const thunder = [1,2,12,13,14,24,25,26,36,37,38,48,49];
         const lightning = [9,10,11,21,22,23,33,34,35,45,46,47];
-
         const qin = [2,4,10,14,16,22,26,28,34,38,40,46];
         const qi = [6,7,9,18,19,21,30,31,33,42,43,45];
         const shu = [1,3,5,13,15,17,25,27,29,37,39,41,49];
         const hua = [8,11,12,20,23,24,32,35,36,44,47,48];
-
         const beauty = [1,2,3,4,10,12,13,14,15,16,22,24,25,26,27,28,34,36,37,38,39,40,46,48,49];
         const ugly = [5,6,7,8,9,11,17,18,19,20,21,23,29,30,31,32,33,35,41,42,43,44,45,47];
 
-        // 条件映射全集
         const conditionMapping = {
             ...mapping,
             '大': sizeNumbers['大'],
@@ -608,7 +570,6 @@
             '5段': duanNumbers['5'],
             '6段': duanNumbers['6'],
             '7段': duanNumbers['7'],
-            // 新增
             '男': genderMale,
             '女': genderFemale,
             '春': spring,
@@ -627,7 +588,6 @@
             '丑': ugly
         };
 
-        // 定义条件类别
         const categoryMap = {};
         const shengxiao = ['马','蛇','龙','兔','虎','牛','鼠','猪','狗','鸡','猴','羊'];
         shengxiao.forEach(k => categoryMap[k] = 'shengxiao');
@@ -647,7 +607,6 @@
         ['琴','棋','书','画'].forEach(k => categoryMap[k] = 'art');
         ['美','丑'].forEach(k => categoryMap[k] = 'beauty');
 
-        // 辅助函数
         function getAnimal(num) {
             for (const [animal, nums] of Object.entries(mapping)) {
                 if (nums.includes(num)) return animal;
@@ -662,15 +621,12 @@
             return 'linear-gradient(145deg, #95a5a6, #7f8c8d)';
         }
 
-        // 核心解析
         function parseConditionsFromText(text) {
             const allNumbers = Array.from({ length: 49 }, (_, i) => i + 1);
             let killNumbers = [];
-
             const tokens = text.split(/[\s,，]+/).filter(t => t.trim() !== '');
             const sortedKeys = Object.keys(conditionMapping).sort((a,b) => b.length - a.length);
             const regex = new RegExp(sortedKeys.join('|'), 'g');
-
             let rawConditionKeys = [];
 
             tokens.forEach(token => {
@@ -685,7 +641,6 @@
                     }
                     return;
                 }
-
                 let matchedSpecial = false;
                 if (token.startsWith('尾')) {
                     const numStr = token.substring(1);
@@ -712,7 +667,6 @@
                     }
                 }
                 if (matchedSpecial) return;
-
                 const matches = token.match(regex);
                 if (matches) {
                     rawConditionKeys.push(...matches);
@@ -720,7 +674,6 @@
             });
 
             rawConditionKeys = [...new Set(rawConditionKeys)];
-
             const categoryArrays = {};
             rawConditionKeys.forEach(key => {
                 const cat = categoryMap[key];
@@ -745,11 +698,9 @@
                     return acc.filter(num => set.includes(num));
                 }, allNumbers);
             }
-
             if (killNumbers.length > 0) {
                 result = result.filter(num => !killNumbers.includes(num));
             }
-
             return [...new Set(result)].sort((a,b) => a-b);
         }
 
@@ -760,8 +711,7 @@
         const voiceBtn = document.getElementById('voiceBtn');
         const clearChatBtn = document.getElementById('clearChatBtn');
         const helpBtn = document.getElementById('helpBtn');
-        const inputArea = document.getElementById('inputArea');
-        const chatContainer = document.querySelector('.chat-container');
+        const chatContainer = document.getElementById('chatContainer');
 
         function addMessage(contentHtml, type = 'bot') {
             const row = document.createElement('div');
@@ -783,14 +733,12 @@
             if (numbers.length === 0) {
                 return `<div><i class="fa fa-times-circle" style="color:#e74c3c"></i> 没有符合条件的数字。<br>试试其他组合，例如：红波 大 男</div>`;
             }
-
             let chipsHtml = '';
             numbers.forEach(num => {
                 const animal = getAnimal(num);
                 const bg = getNumberColor(num);
                 chipsHtml += `<span class="number-chip" style="background: ${bg};">${num}<span class="animal-small">${animal}</span></span>`;
             });
-
             return `
                 <div style="margin-bottom: 4px;">🔍 条件：<span style="background:#eef3f7; padding:2px 8px; border-radius:16px;">${userText}</span></div>
                 <div class="number-grid">${chipsHtml}</div>
@@ -800,26 +748,19 @@
 
         function handleUserInput(inputText) {
             if (!inputText.trim()) return;
-
             const trial = getTrialInfo();
             if (trial.isFirst) {
-                // 异步激活，不阻塞消息
-                activateTrial().then(() => {
-                    // 激活后可能需要刷新剩余天数显示，但消息已经发送，可以忽略
-                });
+                activateTrial();
             }
-
             const currentTrial = getTrialInfo();
             if (!currentTrial.isValid) {
                 addMessage(`<div style="color:#e67e22;">⚠️ 您的30天试用期已结束，筛选功能已禁用。如需购买请联系微信号：${CONTACT_WECHAT}</div>`, 'bot');
                 return;
             }
-
             if (currentTrial.daysLeft <= WARNING_DAYS && currentTrial.daysLeft > 0) {
                 const daysLeftRounded = Math.ceil(currentTrial.daysLeft);
                 addMessage(`<div style="color:#e67e22;">🔔 您的试用期剩余 ${daysLeftRounded} 天，到期后将无法使用。如需购买请联系微信号：${CONTACT_WECHAT}</div>`, 'bot');
             }
-
             addMessage(`<div>${inputText.replace(/</g,'&lt;')}</div>`, 'user');
             const numbers = parseConditionsFromText(inputText);
             const resultHtml = buildResultMessage(numbers, inputText);
@@ -831,7 +772,7 @@
             if (text === '') return;
             handleUserInput(text);
             messageInput.value = '';
-            messageInput.blur(); // 发送后收起键盘
+            messageInput.blur();
         }
 
         function initWelcome() {
@@ -862,7 +803,6 @@
         // 语音识别
         let recognition = null;
         let isListening = false;
-
         const isSpeechSupported = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
         if (isSpeechSupported) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -876,24 +816,20 @@
                 voiceBtn.classList.add('listening');
                 voiceBtn.innerHTML = '<i class="fas fa-microphone-alt"></i>';
             };
-
             recognition.onend = function() {
                 isListening = false;
                 voiceBtn.classList.remove('listening');
                 voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
             };
-
             recognition.onresult = function(event) {
                 const transcript = event.results[0][0].transcript;
                 messageInput.value = transcript;
                 sendMessage();
             };
-
             recognition.onerror = function(event) {
                 isListening = false;
                 voiceBtn.classList.remove('listening');
                 voiceBtn.innerHTML = '<i class="fas fa-microphone"></i>';
-
                 let errorMsg = '语音识别出错';
                 if (event.error === 'not-allowed') {
                     errorMsg = '🎤 麦克风权限被拒绝。请在浏览器设置中允许麦克风，或使用文字输入。';
@@ -926,60 +862,80 @@
             }
         });
 
-        // ---------- 移动端防遮挡：采用 fixed 定位 + padding-bottom ----------
-        let lastInnerHeight = window.innerHeight;
-        let keyboardHeight = 0;
+        // ---------- 终极键盘防遮挡方案 ----------
+        let lastViewportHeight = window.innerHeight;
         let isKeyboardVisible = false;
+        let pollTimer = null;
 
-        function adjustForKeyboard() {
-            const active = document.activeElement === messageInput;
+        function getKeyboardHeight() {
+            // 优先使用 visualViewport
+            if (window.visualViewport) {
+                const visualHeight = window.visualViewport.height;
+                const layoutHeight = document.documentElement.clientHeight;
+                const keyboard = layoutHeight - visualHeight;
+                return keyboard > 50 ? keyboard : 0;
+            }
+            // fallback: 使用 innerHeight 差值
             const currentHeight = window.innerHeight;
-            const heightDiff = lastInnerHeight - currentHeight;
+            const diff = lastViewportHeight - currentHeight;
+            if (diff > 50) return diff;
+            return 0;
+        }
 
-            // 如果高度差大于50，认为键盘弹出
-            if (active && heightDiff > 50) {
-                keyboardHeight = heightDiff;
-                isKeyboardVisible = true;
-                // 将输入栏设为 fixed 并上移
-                inputArea.classList.add('fixed-keyboard');
-                inputArea.style.bottom = keyboardHeight + 'px';
-                // 给消息列表增加底部内边距，避免最后一条消息被遮挡
-                messageList.style.paddingBottom = (keyboardHeight + inputArea.offsetHeight) + 'px';
-                // 滚动到底部
+        function adjustHeightForKeyboard() {
+            const keyboardHeight = getKeyboardHeight();
+            if (keyboardHeight > 0) {
+                // 键盘弹出，设置容器高度为可视区域高度
+                chatContainer.style.height = window.innerHeight + 'px';
+                // 确保消息列表滚动到底部
                 setTimeout(() => {
                     messageList.scrollTop = messageList.scrollHeight;
                 }, 50);
-            } else if (!active && isKeyboardVisible) {
-                // 键盘隐藏
-                resetKeyboardAdjust();
+                isKeyboardVisible = true;
+            } else if (isKeyboardVisible) {
+                // 键盘收起，恢复全屏高度
+                chatContainer.style.height = window.innerHeight + 'px';
+                isKeyboardVisible = false;
             }
-            lastInnerHeight = currentHeight;
+            lastViewportHeight = window.innerHeight;
         }
 
-        function resetKeyboardAdjust() {
-            inputArea.classList.remove('fixed-keyboard');
-            inputArea.style.bottom = '';
-            messageList.style.paddingBottom = '';
-            isKeyboardVisible = false;
+        // 监听 visualViewport 变化（最精确）
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => {
+                adjustHeightForKeyboard();
+            });
         }
 
-        // 监听 resize 事件（包括键盘弹出）
+        // 监听 resize 事件作为后备
         window.addEventListener('resize', () => {
-            adjustForKeyboard();
+            adjustHeightForKeyboard();
         });
 
-        // 监听 focus 和 blur
+        // 输入框聚焦时强制检测
         messageInput.addEventListener('focus', () => {
-            // 延迟一下等待键盘完全弹出
-            setTimeout(adjustForKeyboard, 100);
+            // 延迟一点等待键盘完全弹出
+            setTimeout(adjustHeightForKeyboard, 100);
+            // 启动轮询（针对某些三星浏览器可能不触发 resize 的情况）
+            if (pollTimer) clearInterval(pollTimer);
+            pollTimer = setInterval(() => {
+                if (document.activeElement === messageInput) {
+                    adjustHeightForKeyboard();
+                } else {
+                    clearInterval(pollTimer);
+                    pollTimer = null;
+                }
+            }, 200);
         });
 
         messageInput.addEventListener('blur', () => {
-            // 延迟重置，避免误判
+            if (pollTimer) {
+                clearInterval(pollTimer);
+                pollTimer = null;
+            }
+            // 键盘收回后恢复高度
             setTimeout(() => {
-                if (document.activeElement !== messageInput) {
-                    resetKeyboardAdjust();
-                }
+                adjustHeightForKeyboard();
             }, 200);
         });
 
@@ -987,16 +943,10 @@
             messageInput.blur();
         });
 
-        // 如果 visualViewport 存在，也作为补充
-        if (window.visualViewport) {
-            window.visualViewport.addEventListener('resize', () => {
-                if (document.activeElement === messageInput) {
-                    adjustForKeyboard();
-                } else {
-                    resetKeyboardAdjust();
-                }
-            });
-        }
+        // 初始化高度
+        window.addEventListener('load', () => {
+            adjustHeightForKeyboard();
+        });
 
         // 事件绑定
         sendBtn.addEventListener('click', sendMessage);
