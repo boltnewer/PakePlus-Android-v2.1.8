@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>智能挑码 · 聊天版</title>
+    <title>智能挑码</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -33,6 +33,7 @@
             flex-direction: column;
             overflow: hidden;
             border: 1px solid rgba(0,0,0,0.05);
+            position: relative;
         }
 
         .chat-header {
@@ -42,6 +43,7 @@
             align-items: center;
             border-bottom: 1px solid #e9edef;
             box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+            flex-shrink: 0;
         }
 
         .chat-header h2 {
@@ -199,6 +201,9 @@
             align-items: center;
             gap: 8px;
             border-top: 1px solid #e9edef;
+            flex-shrink: 0;
+            transition: transform 0.2s ease;
+            z-index: 10;
         }
 
         .input-area .voice-btn {
@@ -302,18 +307,13 @@
             color: #2c3e50;
         }
 
-        .voice-note {
-            font-size: 0.7rem;
-            color: #8596a0;
-            margin-left: 4px;
-        }
-
         footer {
             text-align: center;
             font-size: 0.7rem;
             color: #8596a0;
             padding: 6px 0;
             background: #f0f2f5;
+            flex-shrink: 0;
         }
     </style>
 </head>
@@ -321,9 +321,8 @@
 <div class="chat-container">
     <div class="chat-header">
         <h2>
-            <i class="fab fa-weixin"></i> 挑码助手 · 移动优化
+            <i class="fab fa-weixin"></i> 智能挑码
         </h2>
-        <span class="badge"><i class="fas fa-magic"></i> 尾123→尾1+尾2+尾3</span>
         <div class="actions">
             <button id="clearChatBtn" title="清空聊天"><i class="fas fa-trash-alt"></i></button>
             <button id="helpBtn" title="使用示例"><i class="fas fa-question-circle"></i></button>
@@ -334,17 +333,41 @@
         <!-- 动态消息 -->
     </div>
 
-    <div class="input-area">
+    <div class="input-area" id="inputArea">
         <button class="voice-btn" id="voiceBtn" title="语音输入（需HTTPS及麦克风权限）"><i class="fas fa-microphone"></i></button>
-        <input type="text" class="text-input" id="messageInput" placeholder="例如：尾123 红 大" autocomplete="off">
+        <input type="text" class="text-input" id="messageInput" placeholder="例如：马蛇 尾123 红 大 男" autocomplete="off">
         <button class="send-btn" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
     </div>
-    <footer>© 同类并集 · 异类交集 · 连写尾头自动拆分</footer>
+    <footer>© 智能挑码</footer>
 </div>
 
 <script>
     (function() {
-        // ---------- 原始数据映射 ----------
+        // ---------- 试用期配置 ----------
+        const TRIAL_DAYS = 30;
+        const WARNING_DAYS = 5;
+        const CONTACT_WECHAT = '13459210987';
+
+        function getTrialInfo() {
+            let firstUse = localStorage.getItem('firstUseTime');
+            if (!firstUse) {
+                return { isValid: true, daysLeft: TRIAL_DAYS, isFirst: true };
+            }
+            firstUse = parseInt(firstUse, 10);
+            const now = Date.now();
+            const daysUsed = (now - firstUse) / (1000 * 60 * 60 * 24);
+            const daysLeft = Math.max(0, TRIAL_DAYS - daysUsed);
+            const isValid = daysLeft > 0;
+            return { isValid, daysLeft, firstUse, isFirst: false };
+        }
+
+        function activateTrial() {
+            if (!localStorage.getItem('firstUseTime')) {
+                localStorage.setItem('firstUseTime', Date.now().toString());
+            }
+        }
+
+        // ---------- 原始数据映射（包含新增条件）----------
         const mapping = {
             '马': [1, 13, 25, 37, 49],
             '蛇': [2, 14, 26, 38],
@@ -421,7 +444,29 @@
             '双': [2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48]
         };
 
-        // 条件映射全集
+        // ---------- 新增映射条件 ----------
+        const genderMale = [1,3,5,6,7,9,11,13,15,17,18,19,21,23,25,27,29,30,31,33,35,37,39,41,42,43,45,47,49];
+        const genderFemale = [2,4,8,10,12,14,16,20,22,24,26,28,32,34,36,38,40,44,46,48];
+
+        const spring = [3,4,5,15,16,17,27,28,29,39,40,41];
+        const summer = [1,2,12,13,14,24,25,26,36,37,38,48,49];
+        const autumn = [9,10,11,21,22,23,33,34,35,45,46,47];
+        const winter = [6,7,8,18,19,20,30,31,32,42,43,44];
+
+        const wind = [3,4,5,15,16,17,27,28,29,39,40,41];
+        const rain = [6,7,8,18,19,20,30,31,32,42,43,44];
+        const thunder = [1,2,12,13,14,24,25,26,36,37,38,48,49];
+        const lightning = [9,10,11,21,22,23,33,34,35,45,46,47];
+
+        const qin = [2,4,10,14,16,22,26,28,34,38,40,46];
+        const qi = [6,7,9,18,19,21,30,31,33,42,43,45];
+        const shu = [1,3,5,13,15,17,25,27,29,37,39,41,49];
+        const hua = [8,11,12,20,23,24,32,35,36,44,47,48];
+
+        const beauty = [1,2,3,4,10,12,13,14,15,16,22,24,25,26,27,28,34,36,37,38,39,40,46,48,49];
+        const ugly = [5,6,7,8,9,11,17,18,19,20,21,23,29,30,31,32,33,35,41,42,43,44,45,47];
+
+        // 条件映射全集（包含新增）
         const conditionMapping = {
             ...mapping,
             '大': sizeNumbers['大'],
@@ -465,7 +510,24 @@
             '4段': duanNumbers['4'],
             '5段': duanNumbers['5'],
             '6段': duanNumbers['6'],
-            '7段': duanNumbers['7']
+            '7段': duanNumbers['7'],
+            // 新增：
+            '男': genderMale,
+            '女': genderFemale,
+            '春': spring,
+            '夏': summer,
+            '秋': autumn,
+            '冬': winter,
+            '风': wind,
+            '雨': rain,
+            '雷': thunder,
+            '电': lightning,
+            '琴': qin,
+            '棋': qi,
+            '书': shu,
+            '画': hua,
+            '美': beauty,
+            '丑': ugly
         };
 
         // ---------- 定义条件类别（同类并集，异类交集）----------
@@ -482,6 +544,12 @@
         ['天','地'].forEach(k => categoryMap[k] = 'skyearth');
         ['金','木','水','火','土'].forEach(k => categoryMap[k] = 'wuxing');
         ['1段','2段','3段','4段','5段','6段','7段'].forEach(k => categoryMap[k] = 'duan');
+        // 新增类别
+        ['男','女'].forEach(k => categoryMap[k] = 'gender');
+        ['春','夏','秋','冬'].forEach(k => categoryMap[k] = 'season');
+        ['风','雨','雷','电'].forEach(k => categoryMap[k] = 'weather');
+        ['琴','棋','书','画'].forEach(k => categoryMap[k] = 'art');
+        ['美','丑'].forEach(k => categoryMap[k] = 'beauty');
 
         // ---------- 辅助函数 ----------
         function getAnimal(num) {
@@ -503,18 +571,13 @@
             const allNumbers = Array.from({ length: 49 }, (_, i) => i + 1);
             let killNumbers = [];
 
-            // 按空格/逗号分割
             const tokens = text.split(/[\s,，]+/).filter(t => t.trim() !== '');
-
-            // 准备正则：所有条件词按长度降序，用于从token中提取
             const sortedKeys = Object.keys(conditionMapping).sort((a,b) => b.length - a.length);
             const regex = new RegExp(sortedKeys.join('|'), 'g');
 
-            // 收集所有条件词
             let rawConditionKeys = [];
 
             tokens.forEach(token => {
-                // 1. 杀码处理 (以"杀"开头)
                 if (token.startsWith('杀') && token.length > 1) {
                     const numPart = token.substring(1);
                     const nums = numPart.match(/\d+/g);
@@ -524,12 +587,10 @@
                             if (v >= 1 && v <= 49) killNumbers.push(v);
                         });
                     }
-                    return; // 杀码token不参与其他条件提取
+                    return;
                 }
 
-                // 2. 特殊拆分：尾+数字串 或 头+数字串 (例如 "尾123" -> 尾1,尾2,尾3)
                 let matchedSpecial = false;
-                // 尾+数字
                 if (token.startsWith('尾')) {
                     const numStr = token.substring(1);
                     if (/^\d+$/.test(numStr)) {
@@ -542,7 +603,6 @@
                         }
                     }
                 }
-                // 头+数字
                 if (token.startsWith('头')) {
                     const numStr = token.substring(1);
                     if (/^\d+$/.test(numStr)) {
@@ -555,21 +615,16 @@
                         }
                     }
                 }
-
-                // 如果已经通过特殊拆分提取了条件，则跳过普通正则匹配（避免重复）
                 if (matchedSpecial) return;
 
-                // 3. 普通正则匹配 (适用于生肖连写、单条件等)
                 const matches = token.match(regex);
                 if (matches) {
                     rawConditionKeys.push(...matches);
                 }
             });
 
-            // 去重原始条件词
             rawConditionKeys = [...new Set(rawConditionKeys)];
 
-            // 按类别分组，每个类别内收集数字数组
             const categoryArrays = {};
             rawConditionKeys.forEach(key => {
                 const cat = categoryMap[key];
@@ -579,7 +634,6 @@
                 }
             });
 
-            // 计算每个类别的并集
             const categoryUnions = {};
             for (let cat in categoryArrays) {
                 const arrays = categoryArrays[cat];
@@ -588,7 +642,6 @@
                 categoryUnions[cat] = [...new Set(union)];
             }
 
-            // 取所有类别并集的交集
             let result = allNumbers;
             const unionList = Object.values(categoryUnions);
             if (unionList.length > 0) {
@@ -597,7 +650,6 @@
                 }, allNumbers);
             }
 
-            // 去除杀码
             if (killNumbers.length > 0) {
                 result = result.filter(num => !killNumbers.includes(num));
             }
@@ -612,6 +664,7 @@
         const voiceBtn = document.getElementById('voiceBtn');
         const clearChatBtn = document.getElementById('clearChatBtn');
         const helpBtn = document.getElementById('helpBtn');
+        const inputArea = document.getElementById('inputArea');
 
         function addMessage(contentHtml, type = 'bot') {
             const row = document.createElement('div');
@@ -631,7 +684,7 @@
 
         function buildResultMessage(numbers, userText) {
             if (numbers.length === 0) {
-                return `<div><i class="fa fa-times-circle" style="color:#e74c3c"></i> 没有符合条件的数字。<br>试试其他组合，例如：红波 大 单</div>`;
+                return `<div><i class="fa fa-times-circle" style="color:#e74c3c"></i> 没有符合条件的数字。<br>试试其他组合，例如：红波 大 男</div>`;
             }
 
             let chipsHtml = '';
@@ -650,6 +703,23 @@
 
         function handleUserInput(inputText) {
             if (!inputText.trim()) return;
+
+            const trial = getTrialInfo();
+            if (trial.isFirst) {
+                activateTrial();
+            }
+
+            const currentTrial = getTrialInfo();
+            if (!currentTrial.isValid) {
+                addMessage(`<div style="color:#e67e22;">⚠️ 您的30天试用期已结束，筛选功能已禁用。如需购买请联系微信号：${CONTACT_WECHAT}</div>`, 'bot');
+                return;
+            }
+
+            if (currentTrial.daysLeft <= WARNING_DAYS && currentTrial.daysLeft > 0) {
+                const daysLeftRounded = Math.ceil(currentTrial.daysLeft);
+                addMessage(`<div style="color:#e67e22;">🔔 您的试用期剩余 ${daysLeftRounded} 天，到期后将无法使用。如需购买请联系微信号：${CONTACT_WECHAT}</div>`, 'bot');
+            }
+
             addMessage(`<div>${inputText.replace(/</g,'&lt;')}</div>`, 'user');
             const numbers = parseConditionsFromText(inputText);
             const resultHtml = buildResultMessage(numbers, inputText);
@@ -669,10 +739,8 @@
                     <div><i class="fas fa-robot" style="color:#02b875;"></i> <strong>智能挑码机器人</strong></div>
                     <div class="example-hint">
                         ✅ 连写自动拆分： “尾123” → 尾1、尾2、尾3 (并集)<br>
-                        ✅ 同类取并集，异类取交集： 红 大 单 → (红)且(大)且(单)<br>
                         ✅ 杀码： 杀5 杀10 排除指定数字<br>
-                        ✅ 语音输入：点击麦克风按钮尝试，需HTTPS及麦克风权限<br>
-                        ⚡ 示例：<span style="background:#e0eefc; padding:3px 6px; border-radius:12px;">尾123 红 大</span> → 尾1+尾2+尾3 且 红 且 大
+                        ⚡ 示例：<span style="background:#e0eefc; padding:3px 6px; border-radius:12px;">春 美 红</span> → 春且美且红
                     </div>
                     <div class="legend-tip">
                         <span class="legend-item"><span class="legend-dot" style="background:#e74c3c;"></span> 红波</span>
@@ -690,11 +758,10 @@
             initWelcome();
         }
 
-        // ---------- 语音识别 (保持按钮可点击，错误友好提示) ----------
+        // ---------- 语音识别 ----------
         let recognition = null;
         let isListening = false;
 
-        // 检测是否支持语音
         const isSpeechSupported = 'webkitSpeechRecognition' in window || 'SpeechRecognition' in window;
         if (isSpeechSupported) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -718,7 +785,7 @@
             recognition.onresult = function(event) {
                 const transcript = event.results[0][0].transcript;
                 messageInput.value = transcript;
-                sendMessage(); // 自动发送
+                sendMessage();
             };
 
             recognition.onerror = function(event) {
@@ -728,27 +795,24 @@
 
                 let errorMsg = '语音识别出错';
                 if (event.error === 'not-allowed') {
-                    errorMsg = '麦克风权限被拒绝，请在浏览器设置中允许麦克风';
+                    errorMsg = '🎤 麦克风权限被拒绝。请在浏览器设置中允许麦克风，或使用文字输入。';
                 } else if (event.error === 'no-speech') {
-                    errorMsg = '未检测到语音，请重试';
+                    errorMsg = '🎤 未检测到语音，请重试。';
                 } else if (event.error === 'network') {
-                    errorMsg = '网络错误，请检查连接';
+                    errorMsg = '🎤 网络错误，请检查连接。';
+                } else if (event.error === 'service-not-allowed') {
+                    errorMsg = '🎤 语音服务被拒绝（可能由于非HTTPS环境）。请使用HTTPS访问或改用文字输入。';
                 } else {
-                    errorMsg = `语音错误: ${event.error}`;
+                    errorMsg = `🎤 语音错误: ${event.error}`;
                 }
-                alert(errorMsg);
+                addMessage(`<div style="color:#e67e22;">${errorMsg}</div>`, 'bot');
             };
         }
 
         voiceBtn.addEventListener('click', () => {
             if (!isSpeechSupported) {
-                alert('您的浏览器不支持语音识别，请使用Chrome/Edge，并确保在HTTPS环境下访问。');
+                addMessage('🎤 您的浏览器不支持语音识别，请使用Chrome/Edge，或直接输入文字。', 'bot');
                 return;
-            }
-            // 检查是否在安全上下文（HTTPS 或 localhost）
-            if (location.protocol !== 'https:' && location.hostname !== 'localhost' && !location.hostname.includes('127.0.0.1')) {
-                alert('语音识别需要HTTPS安全环境，当前页面不是HTTPS。您可以尝试在localhost测试，或部署到HTTPS服务器。');
-                // 不阻止，因为有些浏览器可能允许http，但一般会报错
             }
             if (isListening) {
                 recognition.stop();
@@ -756,12 +820,65 @@
                 try {
                     recognition.start();
                 } catch (e) {
-                    alert('无法启动语音识别，请重试或检查麦克风权限。');
+                    addMessage('🎤 无法启动语音识别，请使用文字输入。', 'bot');
                 }
             }
         });
 
-        // 事件绑定
+        // ---------- 移动端输入框防遮挡 ----------
+        let keyboardShow = false;
+
+        function handleKeyboardShow(visualViewport) {
+            if (!visualViewport) return;
+            const layoutViewport = document.documentElement.clientHeight;
+            const keyboardHeight = layoutViewport - visualViewport.height;
+            if (keyboardHeight > 50) {
+                keyboardShow = true;
+                inputArea.style.transform = `translateY(-${keyboardHeight}px)`;
+                setTimeout(() => {
+                    messageList.scrollTop = messageList.scrollHeight;
+                }, 50);
+            }
+        }
+
+        function handleKeyboardHide() {
+            if (keyboardShow) {
+                keyboardShow = false;
+                inputArea.style.transform = '';
+            }
+        }
+
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', () => {
+                if (document.activeElement === messageInput) {
+                    handleKeyboardShow(window.visualViewport);
+                } else {
+                    handleKeyboardHide();
+                }
+            });
+        }
+
+        messageInput.addEventListener('focus', () => {
+            if (window.visualViewport) {
+                handleKeyboardShow(window.visualViewport);
+            } else {
+                setTimeout(() => {
+                    messageInput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 300);
+            }
+        });
+
+        messageInput.addEventListener('blur', () => {
+            if (window.visualViewport) {
+                handleKeyboardHide();
+            }
+        });
+
+        sendBtn.addEventListener('click', () => {
+            messageInput.blur();
+        });
+
+        // ---------- 其他事件绑定 ----------
         sendBtn.addEventListener('click', sendMessage);
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
@@ -773,7 +890,15 @@
         clearChatBtn.addEventListener('click', clearChat);
 
         helpBtn.addEventListener('click', () => {
-            addMessage('💡 可用条件：生肖(马蛇龙兔虎牛鼠猪狗鸡猴羊)、红/蓝/绿、大/小、单/双、头0-4、尾0-9、合大/小/单/双、家/野、天/地、金木水火土、1-7段、杀码(杀数字)。连写如“尾123”自动拆分。', 'bot');
+            const trial = getTrialInfo();
+            let daysLeftMsg = '';
+            if (trial.isFirst) {
+                daysLeftMsg = '剩余30天';
+            } else {
+                const daysLeftInt = Math.ceil(trial.daysLeft);
+                daysLeftMsg = `剩余${daysLeftInt}天`;
+            }
+            addMessage('💡 可用条件：生肖(马蛇龙兔虎牛鼠猪狗鸡猴羊)、红/蓝/绿、大/小、单/双、头0-4、尾0-9、合大/小/单/双、家/野、天/地、金木水火土、1-7段、男女、春夏秋冬、风雨雷电、琴棋书画、美丑。杀码(杀数字)。连写如“尾123”自动拆分。' + daysLeftMsg + '，到期停用，如需购买请联系微信号：' + CONTACT_WECHAT, 'bot');
         });
 
         // 启动
