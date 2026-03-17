@@ -21,7 +21,7 @@
             align-items: center;
             padding: 0;
             margin: 0;
-            overflow: hidden; /* 防止body滚动 */
+            overflow: hidden;
         }
 
         .chat-container {
@@ -38,7 +38,6 @@
             position: relative;
         }
 
-        /* 顶部区域：包含标题和输入栏 */
         .top-section {
             background: #ffffff;
             border-bottom: 1px solid #e9edef;
@@ -89,14 +88,13 @@
             background: #f0f2f5;
         }
 
-        /* 输入栏放在顶部 */
         .input-area {
             background: #f0f2f5;
             padding: 10px 16px 12px 16px;
             display: flex;
             align-items: center;
             gap: 8px;
-            border-top: 1px solid #e9edef; /* 与header分隔 */
+            border-top: 1px solid #e9edef;
         }
 
         .input-area .text-input {
@@ -114,8 +112,8 @@
         .input-area .send-btn {
             background: #02b875;
             border: none;
-            width: 42px;
-            height: 42px;
+            width: 46px;
+            height: 46px;
             border-radius: 50%;
             color: white;
             font-size: 1.2rem;
@@ -133,7 +131,6 @@
             transform: scale(0.95);
         }
 
-        /* 消息列表区域 */
         .message-list {
             flex: 1;
             overflow-y: auto;
@@ -183,10 +180,24 @@
         }
 
         .message-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             font-size: 0.65rem;
             color: #667781;
             margin-top: 4px;
-            text-align: right;
+        }
+
+        .copy-icon {
+            cursor: pointer;
+            opacity: 0.7;
+            padding: 4px;
+            transition: opacity 0.2s;
+            font-size: 0.8rem;
+        }
+
+        .copy-icon:active {
+            opacity: 1;
         }
 
         .number-grid {
@@ -281,11 +292,10 @@
 </head>
 <body>
 <div class="chat-container">
-    <!-- 顶部区域：包含标题和输入栏 -->
     <div class="top-section">
         <div class="chat-header">
             <h2>
-                <i class="fas fa-robot"></i> 智能挑码(仅供娱乐,不可赌博)
+                <i class="fas fa-robot"></i> 智能挑码助手
             </h2>
             <div class="actions">
                 <button id="clearChatBtn" title="清空聊天"><i class="fas fa-trash-alt"></i></button>
@@ -307,6 +317,38 @@
 
 <script>
     (function() {
+        // ---------- 复制功能：兼容所有浏览器（回退方案）----------
+        async function copyToClipboard(text) {
+            // 尝试现代 Clipboard API
+            try {
+                await navigator.clipboard.writeText(text);
+                // 可选提示（为了不干扰用户，可静默成功或简单提示）
+                // alert('复制成功！');
+                return;
+            } catch (err) {
+                console.warn('Clipboard API 失败，尝试回退方案', err);
+                // 回退方案：使用 execCommand
+                try {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    textarea.style.position = 'fixed';
+                    textarea.style.opacity = '0';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    textarea.setSelectionRange(0, text.length); // 对于移动设备
+                    const success = document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    if (!success) {
+                        throw new Error('execCommand 复制失败');
+                    }
+                    // alert('复制成功！');
+                } catch (fallbackErr) {
+                    console.error('所有复制方法都失败', fallbackErr);
+                    alert('复制失败，请手动复制。');
+                }
+            }
+        }
+
         // ---------- 试用期配置 ----------
         const TRIAL_DAYS = 30;
         const WARNING_DAYS = 5;
@@ -672,17 +714,31 @@
         const sendBtn = document.getElementById('sendBtn');
         const clearChatBtn = document.getElementById('clearChatBtn');
         const helpBtn = document.getElementById('helpBtn');
+        const inputArea = document.getElementById('inputArea');
 
-        function addMessage(contentHtml, type = 'bot') {
+        function addMessage(contentHtml, type = 'bot', copyText = '') {
             const row = document.createElement('div');
             row.className = `message-row ${type}`;
             const bubble = document.createElement('div');
             bubble.className = 'message-bubble';
             bubble.innerHTML = contentHtml;
-            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             const meta = document.createElement('div');
             meta.className = 'message-meta';
-            meta.innerText = time;
+            
+            const timeSpan = document.createElement('span');
+            timeSpan.innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            meta.appendChild(timeSpan);
+
+            if (copyText) {
+                const copyIcon = document.createElement('i');
+                copyIcon.className = 'fas fa-copy copy-icon';
+                copyIcon.onclick = (e) => {
+                    e.stopPropagation();
+                    copyToClipboard(copyText);
+                };
+                meta.appendChild(copyIcon);
+            }
+
             bubble.appendChild(meta);
             row.appendChild(bubble);
             messageList.appendChild(row);
@@ -691,7 +747,7 @@
 
         function buildResultMessage(numbers, userText) {
             if (numbers.length === 0) {
-                return `<div><i class="fa fa-times-circle" style="color:#e74c3c"></i> 没有符合条件的数字。<br>试试其他组合，例如：红 大 男</div>`;
+                return `<div><i class="fa fa-times-circle" style="color:#e74c3c"></i> 没有符合条件的数字。<br>试试其他组合，例如：红波 大 男</div>`;
             }
             let chipsHtml = '';
             numbers.forEach(num => {
@@ -714,17 +770,22 @@
             }
             const currentTrial = getTrialInfo();
             if (!currentTrial.isValid) {
-                addMessage(`<div style="color:#e67e22;">⚠️ 您的30天试用期已结束，筛选功能已禁用。如需继续使用请联系微信号：${CONTACT_WECHAT}</div>`, 'bot');
+                addMessage(`<div style="color:#e67e22;">⚠️ 您的30天试用期已结束，筛选功能已禁用。如需购买请联系微信号：${CONTACT_WECHAT}</div>`, 'bot');
                 return;
             }
             if (currentTrial.daysLeft <= WARNING_DAYS && currentTrial.daysLeft > 0) {
                 const daysLeftRounded = Math.ceil(currentTrial.daysLeft);
                 addMessage(`<div style="color:#e67e22;">🔔 您的试用期剩余 ${daysLeftRounded} 天，到期后将无法使用。如需继续使用请联系微信号：${CONTACT_WECHAT}</div>`, 'bot');
             }
-            addMessage(`<div>${inputText.replace(/</g,'&lt;')}</div>`, 'user');
+
+            // 用户消息
+            addMessage(`<div>${inputText.replace(/</g,'&lt;')}</div>`, 'user', inputText);
+
+            // 机器人回复
             const numbers = parseConditionsFromText(inputText);
             const resultHtml = buildResultMessage(numbers, inputText);
-            addMessage(resultHtml, 'bot');
+            const copyNumbers = numbers.length > 0 ? numbers.join(', ') : '';
+            addMessage(resultHtml, 'bot', copyNumbers);
         }
 
         function sendMessage() {
@@ -732,7 +793,7 @@
             if (text === '') return;
             handleUserInput(text);
             messageInput.value = '';
-            messageInput.blur(); // 发送后收起键盘
+            messageInput.blur();
         }
 
         function initWelcome() {
@@ -741,14 +802,14 @@
                     <div class="example-hint">
                         ✅ “尾123” → 尾1、尾2、尾3 (并集)<br>
                         ✅ 杀码： 杀5 杀10 排除指定数字<br>
-                        ✅ 不同条件之间请用空格分隔<br>
-                        ⚡ 示例：<span style="background:#e0eefc; padding:3px 6px; border-radius:12px;">春 美 红</span> → 春+美+红 交集
+						✅ 不同条件之间请用空格间隔<br>
+                        ⚡ 示例：<span style="background:#e0eefc; padding:3px 6px; border-radius:12px;">春 美 红</span> → 春且美且红
                     </div>
                     <div class="legend-tip">
                         <span class="legend-item"><span class="legend-dot" style="background:#e74c3c;"></span> 红波</span>
                         <span class="legend-item"><span class="legend-dot" style="background:#3498db;"></span> 蓝波</span>
                         <span class="legend-item"><span class="legend-dot" style="background:#2ecc71;"></span> 绿波</span>
-                        <span class="legend-item">数字旁为生肖</span>
+                        <span class="legend-item">数字旁小字为生肖</span>
                     </div>
                 </div>
             `;
@@ -760,7 +821,7 @@
             initWelcome();
         }
 
-        // 键盘弹出时滚动消息列表到底部（可选）
+        // 键盘弹出时滚动消息列表到底部
         messageInput.addEventListener('focus', () => {
             setTimeout(() => {
                 messageList.scrollTop = messageList.scrollHeight;
