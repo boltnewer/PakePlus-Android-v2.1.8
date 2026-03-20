@@ -3,857 +3,2843 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>智能挑码</title>
+    <title>挑码器 - 多功能筛选工具</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* 重置样式 */
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Microsoft YaHei', 'Segoe UI', Roboto, sans-serif;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-
+        
         body {
-            background: #e5ddd5;
-            height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
-            align-items: center;
-            padding: 0;
-            margin: 0;
+            align-items: flex-start;
+            padding: 10px;
+            color: #333;
+            font-size: 14px;
+            overflow-x: hidden;
+            -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #e1e8f0;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+            gap: 15px;
+        }
+        
+        .keyboard-section {
+            width: 100%;
+        }
+        
+        .array-section {
+            width: 100%;
+            background: #f8fafc;
+            border-radius: 11px;
+            padding: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+        }
+        
+        header {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(90deg, #4f6ef7, #6b8cff);
+            border-bottom: 1px solid #e2e8f0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        h1 {
+            font-size: 1.2rem;
+            margin-bottom: 7px;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .subtitle {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.9);
+            max-width: 550px;
+            margin: 0 auto;
+            line-height: 1.4;
+        }
+        
+        .keyboard {
+            padding: 5px;
+            width: 100%;
             overflow: hidden;
         }
-
-        .chat-container {
+        
+        /* === 关键修复：使用百分比布局 === */
+        .keyboard-grid-wrapper {
             width: 100%;
-            max-width: 950px;
-            height: 100vh;
-            background-color: #f0f2f5;
-            border-radius: 10px 10px 5px 5px;
-            box-shadow: 0 6px 24px rgba(0,0,0,0.15);
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            border: 1px solid rgba(0,0,0,0.05);
-            position: relative;
         }
-
-        .top-section {
-            background: #ffffff;
-            border-bottom: 1px solid #e9edef;
+        
+        .letter-row {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 6px;
+            gap: 3px;
+        }
+        
+        .letter-btn {
+            flex: 1;
+            min-width: 0; /* 关键：允许按钮缩小 */
+            height: 32px;
+            border-radius: 6px;
+            background: linear-gradient(145deg, #6b8cff, #4f6ef7);
+            color: white;
+            font-size: 0.85rem;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(79, 110, 247, 0.2);
+            display: flex !important;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            padding: 0;
+            flex-shrink: 1;
+        }
+        
+        .letter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(79, 110, 247, 0.3);
+        }
+        
+        .letter-btn.inactive {
+            background: #e2e8f0;
+            color: #94a3b8;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .number-row {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 6px;
+            gap: 3px;
+        }
+        
+        .number-btn {
+            flex: 1;
+            min-width: 0; /* 关键：允许按钮缩小 */
+            height: 30px;
+            border-radius: 50%;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: flex !important;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            padding: 0;
+            flex-shrink: 1;
+        }
+        
+        .red-btn {
+            background: linear-gradient(145deg, #ff6b6b, #ff5252);
+            box-shadow: 0 4px 8px rgba(255, 107, 107, 0.2);
+        }
+        
+        .blue-btn {
+            background: linear-gradient(145deg, #4dabf7, #339af0);
+            box-shadow: 0 4px 8px rgba(51, 154, 240, 0.2);
+        }
+        
+        .green-btn {
+            background: linear-gradient(145deg, #51cf66, #40c057);
+            box-shadow: 0 4px 8px rgba(64, 192, 87, 0.2);
+        }
+        
+        .number-btn.inactive {
+            background: #e9ecef;
+            color: #adb5bd;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* 空单元格 */
+        .empty-cell {
+            flex: 1;
+            min-width: 0;
+            height: 30px;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        
+        /* 功能按钮 */
+        .function-buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .selected-count {
+            background: #f1f3f5;
+            padding: 5px 12px;
+            border-radius: 45px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #495057;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e9ecef;
+        }
+        
+        .func-btn {
+            padding: 7px 14px;
+            border-radius: 45px;
+            border: none;
+            background: linear-gradient(145deg, #748ffc, #5c7cfa);
+            color: white;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(92, 124, 250, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .func-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(92, 124, 250, 0.3);
+        }
+        
+        .func-btn.reset {
+            background: linear-gradient(145deg, #ff8787, #fa5252);
+            box-shadow: 0 4px 8px rgba(250, 82, 82, 0.2);
+        }
+        
+        /* 筛选功能区域 */
+        .filter-section {
+            background: #f8f9fa;
+            border-radius: 11px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #e9ecef;
+            overflow: hidden;
+        }
+        
+        .filter-options {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 5px;
+            padding: 6px 0;
+        }
+        
+        .filter-option {
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 6px 8px;
+            border-radius: 45px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
             flex-shrink: 0;
         }
-
-        .chat-header {
-            padding: 10px 10px;
-            display: flex;
-            align-items: center;
-        }
-
-        .chat-header h2 {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #1f2c33;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .chat-header h2 i {
-            color: #02b875;
-        }
-
-        .chat-header .actions {
-            margin-left: auto;
-            display: flex;
-            gap: 12px;
-        }
-
-        .chat-header .actions button {
-            background: none;
-            border: none;
-            font-size: 1.2rem;
-            color: #54656f;
+        
+        .filter-option input {
+            margin-right: 4px;
+            width: 13px;
+            height: 13px;
             cursor: pointer;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
+        }
+        
+        .filter-option label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            color: #495057;
+            white-space: nowrap;
+        }
+        
+        /* 其他样式保持不变... */
+        .divider {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #dee2e6, transparent);
+            margin: 5px 0;
+        }
+        
+        .linear-divider {
+            width: 2px;
+            background: linear-gradient(transparent, #dee2e6, transparent);
+            margin: 0 5px;
+        }
+        
+        /* 增强筛选部分 */
+        .enhanced-filter-panel {
+            background: #f8f9fa;
+            border-radius: 11px;
+            padding: 14px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 14px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .enhanced-filter-header {
             display: flex;
-            align-items: center;
             justify-content: center;
-            transition: background 0.2s;
+            align-items: center;
+            margin-bottom: 14px;
         }
-
-        .chat-header .actions button:hover {
-            background: #f0f2f5;
+        
+        .enhanced-filter-header i {
+            font-size: 1.1rem;
+            margin-right: 7px;
+            color: #4f6ef7;
         }
-
-        .input-area {
-            background: #f0f2f5;
-            padding: 10px 16px 12px 16px;
+        
+        .enhanced-filter-header h3 {
+            font-size: 1.1rem;
+            color: #495057;
+        }
+        
+        .enhanced-filter-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+        
+        .filter-input-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .filter-input-row {
             display: flex;
             align-items: center;
-            gap: 8px;
-            border-top: 1px solid #e9edef;
+            margin-bottom: 7px;
+            gap: 7px;
+            width: 100%;
         }
-
-        .input-area .text-input {
+        
+        .filter-input-checkbox {
+            width: 15px;
+            height: 15px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        
+        .filter-input {
             flex: 1;
-            border: none;
+            padding: 7px 11px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
             background: white;
-            border-radius: 24px;
-            padding: 12px 18px;
-            font-size: 0.95rem;
-            outline: none;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            color: #495057;
+            font-size: 0.85rem;
+            transition: all 0.3s;
             min-width: 0;
         }
-
-        .input-area .send-btn {
-            background: #02b875;
-            border: none;
-            width: 46px;
-            height: 46px;
-            border-radius: 50%;
-            color: white;
-            font-size: 1.2rem;
+        
+        .filter-input:focus {
+            outline: none;
+            border-color: #4f6ef7;
+            box-shadow: 0 0 0 2px rgba(79, 110, 247, 0.2);
+        }
+        
+        .filter-row-actions {
+            display: flex;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+        
+        .filter-action-btn {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            width: 23px;
+            height: 23px;
             display: flex;
             align-items: center;
             justify-content: center;
+            color: #495057;
             cursor: pointer;
-            box-shadow: 0 3px 6px rgba(2,184,117,0.2);
-            transition: background 0.2s, transform 0.1s;
+            transition: all 0.3s;
             flex-shrink: 0;
         }
-
-        .input-area .send-btn:active {
-            background: #029d62;
-            transform: scale(0.95);
+        
+        .filter-action-btn:hover {
+            background: #4f6ef7;
+            border-color: #4f6ef7;
+            color: white;
         }
-
-        .message-list {
-            flex: 1;
+        
+        .enhanced-filter-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 7px;
+            flex-wrap: wrap;
+        }
+        
+        .enhanced-filter-btn {
+            padding: 7px 15px;
+            border-radius: 5px;
+            border: none;
+            background: linear-gradient(145deg, #4f6ef7, #6b8cff);
+            color: white;
+            font-size: .85rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 4px 8px rgba(79, 110, 247, 0.2);
+        }
+        
+        .enhanced-filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(79, 110, 247, 0.3);
+        }
+        
+        .enhanced-filter-btn.export {
+            background: linear-gradient(145deg, #51cf66, #40c057);
+            box-shadow: 0 4px 8px rgba(64, 192, 87, 0.2);
+        }
+        
+        .enhanced-filter-btn.import {
+            background: linear-gradient(145deg, #4dabf7, #339af0);
+            box-shadow: 0 4px 8px rgba(51, 154, 240, 0.2);
+        }
+        
+        .enhanced-filter-btn.select-all {
+            background: linear-gradient(145deg, #da77f2, #cc5de8);
+            box-shadow: 0 4px 8px rgba(204, 93, 232, 0.2);
+        }
+        
+        /* 杀码/出码区域 */
+        .code-operation-panel {
+            background: #f8f9fa;
+            border-radius: 11px;
+            padding: 14px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e9ecef;
+        }
+        
+        .operation-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 11px;
+        }
+        
+        .operation-header i {
+            font-size: 1.1rem;
+            margin-right: 7px;
+            color: #ff6b6b;
+        }
+        
+        .operation-header h3 {
+            font-size: 1.1rem;
+            color: #495057;
+        }
+        
+        .operation-options {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+        
+        .option-group {
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 4px 14px;
+            border-radius: 45px;
+            transition: all 0.3s;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+        }
+        
+        .option-group input[type="radio"],
+        .option-group input[type="checkbox"] {
+            margin-right: 5px;
+            width: 15px;
+            height: 15px;
+            cursor: pointer;
+        }
+        
+        .option-group label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            color: #495057;
+        }
+        
+        .code-input-container {
+            margin-bottom: 14px;
+        }
+        
+        .code-input {
+            width: 100%;
+            padding: 4px 14px;
+            border-radius: 9px;
+            border: 1px solid #dee2e6;
+            background: white;
+            color: #495057;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .code-input:focus {
+            outline: none;
+            border-color: #4f6ef7;
+            box-shadow: 0 0 0 2px rgba(79, 110, 247, 0.2);
+        }
+        
+        .execute-btn {
+            width: 100%;
+            padding: 6px;
+            border-radius: 9px;
+            font-size: 0.9rem;
+            background: linear-gradient(145deg, #51cf66, #40c057);
+            border: none;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 7px;
+            box-shadow: 0 4px 8px rgba(64, 192, 87, 0.2);
+        }
+        
+        .execute-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(64, 192, 87, 0.3);
+        }
+        
+        /* 已选中的数字区域 */
+        .keyboard-selected-info {
+            background: rgba(64, 192, 87, 0.08);
+            border-radius: 7px;
+            padding: 11px;
+            margin-top: 10px;
+            border-left: 3px solid #40c057;
+            width: 100%;
+            border: 1px solid #e9ecef;
+        }
+        
+        .keyboard-selected-info h4 {
+            color: #40c057;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.95rem;
+        }
+        
+        .keyboard-selected-numbers-list {
+            color: #495057;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            padding: 7px;
+            background: white;
+            border-radius: 5px;
+            min-height: 45px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            max-height: 81px;
             overflow-y: auto;
-            padding: 16px 12px 8px 12px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .keyboard-number-chip {
+            background: #f1f3f5;
+            padding: 4px 9px;
+            border-radius: 45px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: 1px solid #e9ecef;
+        }
+        
+        /* 相同码区域 */
+        .common-code-panel {
+            background: #f8f9fa;
+            border-radius: 11px;
+            padding: 14px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-top: 14px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .common-code-header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 11px;
+        }
+        
+        .common-code-header i {
+            font-size: 1.1rem;
+            margin-right: 7px;
+            color: #4dabf7;
+        }
+        
+        .common-code-header h3 {
+            font-size: 1.1rem;
+            color: #495057;
+        }
+        
+        .common-code-input-group {
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            background: #efeae2;
-            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23efeae2" opacity="0.4"/></svg>');
-            -webkit-overflow-scrolling: touch;
+            gap: 9px;
+            margin-bottom: 11px;
         }
-
-        .message-row {
+        
+        .common-code-input-row {
             display: flex;
-            width: 100%;
-        }
-
-        .message-row.user {
-            justify-content: flex-end;
-        }
-
-        .message-row.bot {
-            justify-content: flex-start;
-        }
-
-        .message-bubble {
-            max-width: 75%;
-            padding: 10px 14px;
-            border-radius: 20px;
-            position: relative;
-            word-break: break-word;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            font-size: 0.95rem;
-            line-height: 1.45;
-        }
-
-        .user .message-bubble {
-            background: #d9fdd3;
-            border-bottom-right-radius: 4px;
-            color: #111b21;
-        }
-
-        .bot .message-bubble {
-            background: #ffffff;
-            border-bottom-left-radius: 4px;
-            color: #111b21;
-        }
-
-        .message-meta {
-            display: flex;
-            justify-content: space-between;
             align-items: center;
-            font-size: 0.65rem;
-            color: #667781;
-            margin-top: 4px;
-        }
-
-        .copy-icon {
-            cursor: pointer;
-            opacity: 0.7;
-            padding: 4px;
-            transition: opacity 0.2s;
-            font-size: 0.8rem;
-        }
-
-        .copy-icon:active {
-            opacity: 1;
-        }
-
-        .number-grid {
-            display: flex;
-            flex-wrap: wrap;
             gap: 6px;
-            margin: 8px 0 4px;
-            justify-content: flex-start;
+            padding: 6px 9px;
+            background: white;
+            border-radius: 7px;
+            transition: all 0.3s;
+            border: 1px solid #e9ecef;
         }
-
-        .number-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 5px 10px 5px 8px;
-            border-radius: 30px;
-            font-weight: 600;
+        
+        .common-code-input {
+            flex: 1;
+            padding: 4px 11px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+            background: white;
+            color: #495057;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+        }
+        
+        .common-code-input:focus {
+            outline: none;
+            border-color: #4f6ef7;
+            box-shadow: 0 0 0 2px rgba(79, 110, 247, 0.2);
+        }
+        
+        .common-code-btn {
+            width: 100%;
+            padding: 6px;
+            border-radius: 9px;
             font-size: 0.9rem;
+            background: linear-gradient(145deg, #da77f2, #cc5de8);
+            border: none;
             color: white;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            transition: 0.1s;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-
-        .number-chip .animal-small {
-            font-size: 0.7rem;
-            font-weight: 400;
-            background: rgba(255,255,255,0.3);
-            padding: 2px 5px;
-            border-radius: 16px;
-            line-height: 1;
-        }
-
-        .stats-line {
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
-            margin-top: 6px;
-            font-size: 0.8rem;
-            color: #3b4a54;
+            gap: 7px;
+            box-shadow: 0 4px 8px rgba(204, 93, 232, 0.2);
         }
-
-        .stats-line .count-badge {
-            background: #e7edf2;
-            padding: 2px 10px;
-            border-radius: 30px;
+        
+        .common-code-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(204, 93, 232, 0.3);
         }
-
-        .legend-tip {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px 12px;
-            font-size: 0.7rem;
-            color: #5f6b76;
-            background: #f7f9fa;
-            padding: 8px 12px;
-            border-radius: 24px;
-            margin-bottom: 6px;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .legend-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #ccc;
-        }
-
-        .example-hint {
-            background: #f1f5f8;
-            border-radius: 18px;
-            padding: 8px 12px;
-            font-size: 0.8rem;
-            color: #2c3e50;
-        }
-
+        
         footer {
             text-align: center;
-            font-size: 0.7rem;
-            color: #8596a0;
-            padding: 4px 0;
-            background: #f0f2f5;
-            border-top: 1px solid #e9edef;
-            flex-shrink: 0;
+            padding: 11px;
+            background: #f8f9fa;
+            color: #868e96;
+            font-size: 0.75rem;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .highlight {
+            color: #4f6ef7;
+            font-weight: 500;
+        }
+        
+        /* 动画效果 */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .pulse {
+            animation: pulse 0.4s ease;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 23px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 9px 18px;
+            border-radius: 45px;
+            font-size: 0.85rem;
+            box-shadow: 0 3px 11px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .toast.show {
+            opacity: 1;
+        }
+        
+        /* 响应式设计 - 关键修复 */
+        @media (max-width: 768px) {
+            .container {
+                max-width: 100%;
+                border-radius: 12px;
+            }
+            
+            body {
+                padding: 5px;
+                align-items: flex-start;
+            }
+            
+            .main-content {
+                padding: 8px;
+                gap: 10px;
+            }
+            
+            .letter-btn {
+                height: 28px;
+                font-size: 0.75rem;
+                border-radius: 4px;
+            }
+            
+            .number-btn, .empty-cell {
+                height: 26px;
+                font-size: 0.7rem;
+            }
+            
+            .letter-row,
+            .number-row {
+                gap: 2px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .letter-btn {
+                height: 26px;
+                font-size: 0.7rem;
+            }
+            
+            .number-btn, .empty-cell {
+                height: 24px;
+                font-size: 0.65rem;
+            }
+            
+            .letter-row,
+            .number-row {
+                gap: 1px;
+            }
+            
+            .function-buttons {
+                gap: 6px;
+            }
+            
+            .func-btn {
+                padding: 5px 10px;
+                font-size: 0.75rem;
+            }
+            
+            .selected-count {
+                font-size: 0.75rem;
+                padding: 4px 10px;
+            }
+            
+            .filter-option {
+                padding: 5px 6px;
+            }
+            
+            .filter-option label {
+                font-size: 0.7rem;
+            }
+        }
+        
+        /* 特别针对窄屏幕的优化 */
+        @media (max-width: 360px) {
+            .letter-btn {
+                height: 24px;
+                font-size: 0.65rem;
+            }
+            
+            .number-btn {
+                height: 22px;
+                font-size: 0.6rem;
+                border-radius: 4px; /* 改为方形，节省空间 */
+            }
+            
+            .empty-cell {
+                height: 22px;
+            }
+            
+            .letter-row,
+            .number-row {
+                gap: 0.5px;
+            }
+            
+            .filter-option {
+                padding: 4px 5px;
+            }
+            
+            .filter-option label {
+                font-size: 0.65rem;
+            }
+        }
+        
+        /* 强制确保所有列显示 - 关键修复 */
+        .letter-row > button,
+        .number-row > button,
+        .number-row > .empty-cell {
+            flex: 1;
+            min-width: 0 !important;
+            max-width: 100%;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            flex-shrink: 1 !important;
+        }
+        
+        /* 确保所有按钮都显示 */
+        #letter-row button,
+        .number-row button {
+            opacity: 1 !important;
+            visibility: visible !important;
+            display: flex !important;
+        }
+        
+        /* 隐藏空单元格 */
+        .empty-cell {
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+        
+        /* 确保蛇生肖按钮显示 */
+        #letter-row > button:first-child {
+            background: linear-gradient(145deg, #6b8cff, #4f6ef7) !important;
+            color: white !important;
+        }
+        
+        /* 针对非常窄的手机，使用水平滚动 */
+        @media (max-width: 320px) {
+            .keyboard {
+                overflow-x: auto;
+                padding-bottom: 5px;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .keyboard-grid-wrapper {
+                min-width: 320px; /* 确保最小宽度 */
+            }
+            
+            .letter-row,
+            .number-row {
+                min-width: 320px;
+            }
         }
     </style>
 </head>
 <body>
-<div class="chat-container">
-    <div class="top-section">
-        <div class="chat-header">
-            <h2>
-                <i class="fas fa-robot"></i> 智能挑码助手
-            </h2>
-            <div class="actions">
-                <button id="clearChatBtn" title="清空聊天"><i class="fas fa-trash-alt"></i></button>
-                <button id="helpBtn" title="使用示例"><i class="fas fa-question-circle"></i></button>
-            </div>
-        </div>
-        <div class="input-area" id="inputArea">
-            <input type="text" class="text-input" id="messageInput" placeholder="例如：尾123 红 大 男" autocomplete="off">
-            <button class="send-btn" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
-        </div>
-    </div>
-
-    <div class="message-list" id="messageList">
-        <!-- 动态消息 -->
-    </div>
-
-    <footer>© 智能挑码机器人</footer>
-</div>
-
-<script>
-    (function() {
-        // ---------- 复制功能：兼容所有浏览器（回退方案）----------
-        async function copyToClipboard(text) {
-            // 尝试现代 Clipboard API
-            try {
-                await navigator.clipboard.writeText(text);
-                // 可选提示（为了不干扰用户，可静默成功或简单提示）
-                // alert('复制成功！');
-                return;
-            } catch (err) {
-                console.warn('Clipboard API 失败，尝试回退方案', err);
-                // 回退方案：使用 execCommand
-                try {
-                    const textarea = document.createElement('textarea');
-                    textarea.value = text;
-                    textarea.style.position = 'fixed';
-                    textarea.style.opacity = '0';
-                    document.body.appendChild(textarea);
-                    textarea.select();
-                    textarea.setSelectionRange(0, text.length); // 对于移动设备
-                    const success = document.execCommand('copy');
-                    document.body.removeChild(textarea);
-                    if (!success) {
-                        throw new Error('execCommand 复制失败');
-                    }
-                    // alert('复制成功！');
-                } catch (fallbackErr) {
-                    console.error('所有复制方法都失败', fallbackErr);
-                    alert('复制失败，请手动复制。');
-                }
-            }
-        }
-
-        // ---------- 试用期配置 ----------
-        const TRIAL_DAYS = 30;
-        const WARNING_DAYS = 5;
-        const CONTACT_WECHAT = '13459210987';
-        const DB_NAME = 'TrialDB';
-        const STORE_NAME = 'trialStore';
-        const KEY = 'firstUseTime';
-
-        let cachedFirstUseTime = null;
-
-        // ---------- IndexedDB 工具 ----------
-        function openDB() {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open(DB_NAME, 1);
-                request.onerror = () => reject(request.error);
-                request.onsuccess = () => resolve(request.result);
-                request.onupgradeneeded = (event) => {
-                    const db = event.target.result;
-                    if (!db.objectStoreNames.contains(STORE_NAME)) {
-                        db.createObjectStore(STORE_NAME);
-                    }
-                };
-            });
-        }
-
-        async function getItemFromDB(key) {
-            const db = await openDB();
-            return new Promise((resolve, reject) => {
-                const tx = db.transaction(STORE_NAME, 'readonly');
-                const store = tx.objectStore(STORE_NAME);
-                const request = store.get(key);
-                request.onerror = () => reject(request.error);
-                request.onsuccess = () => resolve(request.result);
-                tx.oncomplete = () => db.close();
-            });
-        }
-
-        async function setItemToDB(key, value) {
-            const db = await openDB();
-            return new Promise((resolve, reject) => {
-                const tx = db.transaction(STORE_NAME, 'readwrite');
-                const store = tx.objectStore(STORE_NAME);
-                const request = store.put(value, key);
-                request.onerror = () => reject(request.error);
-                request.onsuccess = () => resolve();
-                tx.oncomplete = () => db.close();
-            });
-        }
-
-        async function initTrialStorage() {
-            try {
-                const idbTime = await getItemFromDB(KEY);
-                const lsTime = localStorage.getItem(KEY);
-                if (idbTime) {
-                    if (!lsTime || parseInt(lsTime) > parseInt(idbTime)) {
-                        localStorage.setItem(KEY, idbTime);
-                    }
-                    cachedFirstUseTime = idbTime;
-                } else if (lsTime) {
-                    await setItemToDB(KEY, lsTime);
-                    cachedFirstUseTime = lsTime;
-                } else {
-                    cachedFirstUseTime = null;
-                }
-            } catch (e) {
-                console.warn('IndexedDB 读写失败，仅使用 localStorage', e);
-                cachedFirstUseTime = localStorage.getItem(KEY);
-            }
-        }
-        initTrialStorage();
-
-        function getTrialInfo() {
-            let firstUse = cachedFirstUseTime || localStorage.getItem(KEY);
-            if (!firstUse) {
-                return { isValid: true, daysLeft: TRIAL_DAYS, isFirst: true };
-            }
-            firstUse = parseInt(firstUse, 10);
-            const now = Date.now();
-            const daysUsed = (now - firstUse) / (1000 * 60 * 60 * 24);
-            const daysLeft = Math.max(0, TRIAL_DAYS - daysUsed);
-            const isValid = daysLeft > 0;
-            return { isValid, daysLeft, firstUse, isFirst: false };
-        }
-
-        async function activateTrial() {
-            if (cachedFirstUseTime || localStorage.getItem(KEY)) return;
-            const now = Date.now().toString();
-            localStorage.setItem(KEY, now);
-            cachedFirstUseTime = now;
-            try {
-                await setItemToDB(KEY, now);
-            } catch (e) {
-                console.warn('写入 IndexedDB 失败', e);
-            }
-        }
-
-        // ---------- 原始数据映射 ----------
-        const mapping = {
-            '马': [1, 13, 25, 37, 49],
-            '蛇': [2, 14, 26, 38],
-            '龙': [3, 15, 27, 39],
-            '兔': [4, 16, 28, 40],
-            '虎': [5, 17, 29, 41],
-            '牛': [6, 18, 30, 42],
-            '鼠': [7, 19, 31, 43],
-            '猪': [8, 20, 32, 44],
-            '狗': [9, 21, 33, 45],
-            '鸡': [10, 22, 34, 46],
-            '猴': [11, 23, 35, 47],
-            '羊': [12, 24, 36, 48]
-        };
-        const redNumbers = [1,2,7,8,12,13,18,19,23,24,29,30,34,35,40,45,46];
-        const blueNumbers = [3,4,9,10,14,15,20,25,26,31,36,37,41,42,47,48];
-        const greenNumbers = [5,6,11,16,17,21,22,27,28,32,33,38,39,43,44,49];
-        const homeAnimals = [1,6,8,9,10,12,13,18,20,21,22,24,25,30,32,33,34,36,37,42,44,45,46,48,49];
-        const wildAnimals = [2,3,4,5,7,11,14,15,16,17,19,23,26,27,28,29,31,35,38,39,40,41,43,47];
-        const skyAnimals = [1,3,4,6,8,11,13,15,16,18,20,23,25,27,28,30,32,35,37,39,40,42,44,47,49];
-        const earthAnimals = [2,5,7,9,10,12,14,17,19,21,22,24,26,29,31,33,34,36,38,41,43,45,46,48];
-        const hedans = [1,3,5,7,9,10,12,14,16,18,21,23,25,27,29,30,32,34,36,38,41,43,45,47,49];
-        const hesuangs = [2,4,6,8,11,13,15,17,19,20,22,24,26,28,31,33,35,37,39,40,42,44,46,48];
-        const hedas = [7,8,9,16,17,18,19,25,26,27,28,29,34,35,36,37,38,39,43,44,45,46,47,48,49];
-        const hexiaos = [1,2,3,4,5,6,10,11,12,13,14,15,20,21,22,23,24,30,31,32,33,40,41,42];
-        const wujins = [4,5,12,13,26,27,34,35,42,43];
-        const wumus = [8,9,16,17,24,25,38,39,46,47];
-        const wushuis = [1,14,15,22,23,30,31,44,45];
-        const wuhuos = [2,3,10,11,18,19,32,33,40,41,48,49];
-        const wutus = [6,7,20,21,28,29,36,37];
-        const duanNumbers = {
-            '1': [1,2,3,4,5,6,7],
-            '2': [8,9,10,11,12,13,14],
-            '3': [15,16,17,18,19,20,21],
-            '4': [22,23,24,25,26,27,28],
-            '5': [29,30,31,32,33,34,35],
-            '6': [36,37,38,39,40,41,42],
-            '7': [43,44,45,46,47,48,49]
-        };
-        const sizeNumbers = {
-            '大': [25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49],
-            '小': [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]
-        };
-        const tailNumbers = {
-            '尾0': [10,20,30,40],
-            '尾1': [1,11,21,31,41],
-            '尾2': [2,12,22,32,42],
-            '尾3': [3,13,23,33,43],
-            '尾4': [4,14,24,34,44],
-            '尾5': [5,15,25,35,45],
-            '尾6': [6,16,26,36,46],
-            '尾7': [7,17,27,37,47],
-            '尾8': [8,18,28,38,48],
-            '尾9': [9,19,29,39,49]
-        };
-        const headNumbers = {
-            '头0': [1,2,3,4,5,6,7,8,9],
-            '头1': [10,11,12,13,14,15,16,17,18,19],
-            '头2': [20,21,22,23,24,25,26,27,28,29],
-            '头3': [30,31,32,33,34,35,36,37,38,39],
-            '头4': [40,41,42,43,44,45,46,47,48,49]
-        };
-        const oddEvenNumbers = {
-            '单': [1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43,45,47,49],
-            '双': [2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48]
-        };
-
-        const genderMale = [1,3,5,6,7,9,11,13,15,17,18,19,21,23,25,27,29,30,31,33,35,37,39,41,42,43,45,47,49];
-        const genderFemale = [2,4,8,10,12,14,16,20,22,24,26,28,32,34,36,38,40,44,46,48];
-        const spring = [3,4,5,15,16,17,27,28,29,39,40,41];
-        const summer = [1,2,12,13,14,24,25,26,36,37,38,48,49];
-        const autumn = [9,10,11,21,22,23,33,34,35,45,46,47];
-        const winter = [6,7,8,18,19,20,30,31,32,42,43,44];
-        const wind = [3,4,5,15,16,17,27,28,29,39,40,41];
-        const rain = [6,7,8,18,19,20,30,31,32,42,43,44];
-        const thunder = [1,2,12,13,14,24,25,26,36,37,38,48,49];
-        const lightning = [9,10,11,21,22,23,33,34,35,45,46,47];
-        const qin = [2,4,10,14,16,22,26,28,34,38,40,46];
-        const qi = [6,7,9,18,19,21,30,31,33,42,43,45];
-        const shu = [1,3,5,13,15,17,25,27,29,37,39,41,49];
-        const hua = [8,11,12,20,23,24,32,35,36,44,47,48];
-        const beauty = [1,2,3,4,10,12,13,14,15,16,22,24,25,26,27,28,34,36,37,38,39,40,46,48,49];
-        const ugly = [5,6,7,8,9,11,17,18,19,20,21,23,29,30,31,32,33,35,41,42,43,44,45,47];
-
-        const conditionMapping = {
-            ...mapping,
-            '大': sizeNumbers['大'],
-            '小': sizeNumbers['小'],
-            '红': redNumbers,
-            '蓝': blueNumbers,
-            '绿': greenNumbers,
-            '尾0': tailNumbers['尾0'],
-            '尾1': tailNumbers['尾1'],
-            '尾2': tailNumbers['尾2'],
-            '尾3': tailNumbers['尾3'],
-            '尾4': tailNumbers['尾4'],
-            '尾5': tailNumbers['尾5'],
-            '尾6': tailNumbers['尾6'],
-            '尾7': tailNumbers['尾7'],
-            '尾8': tailNumbers['尾8'],
-            '尾9': tailNumbers['尾9'],
-            '头0': headNumbers['头0'],
-            '头1': headNumbers['头1'],
-            '头2': headNumbers['头2'],
-            '头3': headNumbers['头3'],
-            '头4': headNumbers['头4'],
-            '合大': hedas,
-            '合小': hexiaos,
-            '合单': hedans,
-            '合双': hesuangs,
-            '家': homeAnimals,
-            '野': wildAnimals,
-            '单': oddEvenNumbers['单'],
-            '双': oddEvenNumbers['双'],
-            '天': skyAnimals,
-            '地': earthAnimals,
-            '金': wujins,
-            '木': wumus,
-            '水': wushuis,
-            '火': wuhuos,
-            '土': wutus,
-            '1段': duanNumbers['1'],
-            '2段': duanNumbers['2'],
-            '3段': duanNumbers['3'],
-            '4段': duanNumbers['4'],
-            '5段': duanNumbers['5'],
-            '6段': duanNumbers['6'],
-            '7段': duanNumbers['7'],
-            '男': genderMale,
-            '女': genderFemale,
-            '春': spring,
-            '夏': summer,
-            '秋': autumn,
-            '冬': winter,
-            '风': wind,
-            '雨': rain,
-            '雷': thunder,
-            '电': lightning,
-            '琴': qin,
-            '棋': qi,
-            '书': shu,
-            '画': hua,
-            '美': beauty,
-            '丑': ugly
-        };
-
-        const categoryMap = {};
-        const shengxiao = ['马','蛇','龙','兔','虎','牛','鼠','猪','狗','鸡','猴','羊'];
-        shengxiao.forEach(k => categoryMap[k] = 'shengxiao');
-        ['大','小'].forEach(k => categoryMap[k] = 'size');
-        ['红','蓝','绿'].forEach(k => categoryMap[k] = 'color');
-        ['尾0','尾1','尾2','尾3','尾4','尾5','尾6','尾7','尾8','尾9'].forEach(k => categoryMap[k] = 'tail');
-        ['头0','头1','头2','头3','头4'].forEach(k => categoryMap[k] = 'head');
-        ['合大','合小','合单','合双'].forEach(k => categoryMap[k] = 'he');
-        ['家','野'].forEach(k => categoryMap[k] = 'homewild');
-        ['单','双'].forEach(k => categoryMap[k] = 'oddeven');
-        ['天','地'].forEach(k => categoryMap[k] = 'skyearth');
-        ['金','木','水','火','土'].forEach(k => categoryMap[k] = 'wuxing');
-        ['1段','2段','3段','4段','5段','6段','7段'].forEach(k => categoryMap[k] = 'duan');
-        ['男','女'].forEach(k => categoryMap[k] = 'gender');
-        ['春','夏','秋','冬'].forEach(k => categoryMap[k] = 'season');
-        ['风','雨','雷','电'].forEach(k => categoryMap[k] = 'weather');
-        ['琴','棋','书','画'].forEach(k => categoryMap[k] = 'art');
-        ['美','丑'].forEach(k => categoryMap[k] = 'beauty');
-
-        function getAnimal(num) {
-            for (const [animal, nums] of Object.entries(mapping)) {
-                if (nums.includes(num)) return animal;
-            }
-            return '';
-        }
-
-        function getNumberColor(num) {
-            if (redNumbers.includes(num)) return 'linear-gradient(145deg, #e74c3c, #c0392b)';
-            if (blueNumbers.includes(num)) return 'linear-gradient(145deg, #3498db, #2980b9)';
-            if (greenNumbers.includes(num)) return 'linear-gradient(145deg, #2ecc71, #27ae60)';
-            return 'linear-gradient(145deg, #95a5a6, #7f8c8d)';
-        }
-
-        function parseConditionsFromText(text) {
-            const allNumbers = Array.from({ length: 49 }, (_, i) => i + 1);
-            let killNumbers = [];
-            const tokens = text.split(/[\s,，]+/).filter(t => t.trim() !== '');
-            const sortedKeys = Object.keys(conditionMapping).sort((a,b) => b.length - a.length);
-            const regex = new RegExp(sortedKeys.join('|'), 'g');
-            let rawConditionKeys = [];
-
-            tokens.forEach(token => {
-                if (token.startsWith('杀') && token.length > 1) {
-                    const numPart = token.substring(1);
-                    const nums = numPart.match(/\d+/g);
-                    if (nums) {
-                        nums.forEach(n => {
-                            let v = parseInt(n, 10);
-                            if (v >= 1 && v <= 49) killNumbers.push(v);
-                        });
-                    }
-                    return;
-                }
-                let matchedSpecial = false;
-                if (token.startsWith('尾')) {
-                    const numStr = token.substring(1);
-                    if (/^\d+$/.test(numStr)) {
-                        for (let ch of numStr) {
-                            const cond = '尾' + ch;
-                            if (conditionMapping[cond]) {
-                                rawConditionKeys.push(cond);
-                                matchedSpecial = true;
-                            }
-                        }
-                    }
-                }
-                if (token.startsWith('头')) {
-                    const numStr = token.substring(1);
-                    if (/^\d+$/.test(numStr)) {
-                        for (let ch of numStr) {
-                            const cond = '头' + ch;
-                            if (conditionMapping[cond]) {
-                                rawConditionKeys.push(cond);
-                                matchedSpecial = true;
-                            }
-                        }
-                    }
-                }
-                if (matchedSpecial) return;
-                const matches = token.match(regex);
-                if (matches) {
-                    rawConditionKeys.push(...matches);
-                }
-            });
-
-            rawConditionKeys = [...new Set(rawConditionKeys)];
-            const categoryArrays = {};
-            rawConditionKeys.forEach(key => {
-                const cat = categoryMap[key];
-                if (cat && conditionMapping[key]) {
-                    if (!categoryArrays[cat]) categoryArrays[cat] = [];
-                    categoryArrays[cat].push(conditionMapping[key]);
-                }
-            });
-
-            const categoryUnions = {};
-            for (let cat in categoryArrays) {
-                const arrays = categoryArrays[cat];
-                const union = [];
-                arrays.forEach(arr => union.push(...arr));
-                categoryUnions[cat] = [...new Set(union)];
-            }
-
-            let result = allNumbers;
-            const unionList = Object.values(categoryUnions);
-            if (unionList.length > 0) {
-                result = unionList.reduce((acc, set) => {
-                    return acc.filter(num => set.includes(num));
-                }, allNumbers);
-            }
-            if (killNumbers.length > 0) {
-                result = result.filter(num => !killNumbers.includes(num));
-            }
-            return [...new Set(result)].sort((a,b) => a-b);
-        }
-
-        // 聊天界面逻辑
-        const messageList = document.getElementById('messageList');
-        const messageInput = document.getElementById('messageInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const clearChatBtn = document.getElementById('clearChatBtn');
-        const helpBtn = document.getElementById('helpBtn');
-        const inputArea = document.getElementById('inputArea');
-
-        function addMessage(contentHtml, type = 'bot', copyText = '') {
-            const row = document.createElement('div');
-            row.className = `message-row ${type}`;
-            const bubble = document.createElement('div');
-            bubble.className = 'message-bubble';
-            bubble.innerHTML = contentHtml;
-            const meta = document.createElement('div');
-            meta.className = 'message-meta';
-            
-            const timeSpan = document.createElement('span');
-            timeSpan.innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            meta.appendChild(timeSpan);
-
-            if (copyText) {
-                const copyIcon = document.createElement('i');
-                copyIcon.className = 'fas fa-copy copy-icon';
-                copyIcon.onclick = (e) => {
-                    e.stopPropagation();
-                    copyToClipboard(copyText);
-                };
-                meta.appendChild(copyIcon);
-            }
-
-            bubble.appendChild(meta);
-            row.appendChild(bubble);
-            messageList.appendChild(row);
-            messageList.scrollTop = messageList.scrollHeight;
-        }
-
-        function buildResultMessage(numbers, userText) {
-            if (numbers.length === 0) {
-                return `<div><i class="fa fa-times-circle" style="color:#e74c3c"></i> 没有符合条件的数字。<br>试试其他组合，例如：红波 大 男</div>`;
-            }
-            let chipsHtml = '';
-            numbers.forEach(num => {
-                const animal = getAnimal(num);
-                const bg = getNumberColor(num);
-                chipsHtml += `<span class="number-chip" style="background: ${bg};">${num}<span class="animal-small">${animal}</span></span>`;
-            });
-            return `
-                <div style="margin-bottom: 4px;">🔍 条件：<span style="background:#eef3f7; padding:2px 8px; border-radius:16px;">${userText}</span></div>
-                <div class="number-grid">${chipsHtml}</div>
-                <div class="stats-line"><span>📊 共 ${numbers.length} 个数字</span><span class="count-badge"><i class="far fa-clock"></i> 实时筛选</span></div>
-            `;
-        }
-
-        function handleUserInput(inputText) {
-            if (!inputText.trim()) return;
-            const trial = getTrialInfo();
-            if (trial.isFirst) {
-                activateTrial();
-            }
-            const currentTrial = getTrialInfo();
-            if (!currentTrial.isValid) {
-                addMessage(`<div style="color:#e67e22;">⚠️ 您的30天试用期已结束，筛选功能已禁用。如需购买请联系微信号：${CONTACT_WECHAT}</div>`, 'bot');
-                return;
-            }
-            if (currentTrial.daysLeft <= WARNING_DAYS && currentTrial.daysLeft > 0) {
-                const daysLeftRounded = Math.ceil(currentTrial.daysLeft);
-                addMessage(`<div style="color:#e67e22;">🔔 您的试用期剩余 ${daysLeftRounded} 天，到期后将无法使用。如需继续使用请联系微信号：${CONTACT_WECHAT}</div>`, 'bot');
-            }
-
-            // 用户消息
-            addMessage(`<div>${inputText.replace(/</g,'&lt;')}</div>`, 'user', inputText);
-
-            // 机器人回复
-            const numbers = parseConditionsFromText(inputText);
-            const resultHtml = buildResultMessage(numbers, inputText);
-            const copyNumbers = numbers.length > 0 ? numbers.join(', ') : '';
-            addMessage(resultHtml, 'bot', copyNumbers);
-        }
-
-        function sendMessage() {
-            const text = messageInput.value.trim();
-            if (text === '') return;
-            handleUserInput(text);
-            messageInput.value = '';
-            messageInput.blur();
-        }
-
-        function initWelcome() {
-            const welcomeHtml = `
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                    <div class="example-hint">
-                        ✅ “尾123” → 尾1、尾2、尾3 (并集)<br>
-                        ✅ 杀码： 杀5 杀10 排除指定数字<br>
-						✅ 不同条件之间请用空格间隔<br>
-                        ⚡ 示例：<span style="background:#e0eefc; padding:3px 6px; border-radius:12px;">春 美 红</span> → 春且美且红
+    <div class="container">
+        <header>
+            <h1>挑  码  器</h1>
+        </header>
+        
+        <div class="main-content">
+            <div class="keyboard-section">
+                <div class="keyboard">
+                    <div class="keyboard-grid-wrapper">
+                        <!-- 字母行 -->
+                        <div class="letter-row" id="letter-row">
+                            <!-- 字母按钮由JS生成 -->
+                        </div>
+                        
+                        <!-- 数字行 -->
+                        <div class="number-row" id="row-0">
+                            <!-- 数字按钮由JS生成 -->
+                        </div>
+                        <div class="number-row" id="row-1">
+                            <!-- 数字按钮由JS生成 -->
+                        </div>
+                        <div class="number-row" id="row-2">
+                            <!-- 数字按钮由JS生成 -->
+                        </div>
+                        <div class="number-row" id="row-3">
+                            <!-- 数字按钮由JS生成 -->
+                        </div>
+                        <div class="number-row" id="row-4">
+                            <!-- 数字按钮由JS生成 -->
+                        </div>
                     </div>
-                    <div class="legend-tip">
-                        <span class="legend-item"><span class="legend-dot" style="background:#e74c3c;"></span> 红波</span>
-                        <span class="legend-item"><span class="legend-dot" style="background:#3498db;"></span> 蓝波</span>
-                        <span class="legend-item"><span class="legend-dot" style="background:#2ecc71;"></span> 绿波</span>
-                        <span class="legend-item">数字旁小字为生肖</span>
+                    
+                    <!-- 功能按钮 -->
+                    <div class="function-buttons">
+                        <div class="selected-count" id="selected-count">已选中: 0 个数字</div>
+                        <button class="func-btn" id="copy-btn">
+                            <i class="fas fa-copy"></i> 复制选中
+                        </button>
+                        <button class="func-btn reset" id="reset-btn">
+                            <i class="fas fa-undo"></i> 复位
+                        </button>
+                    </div>
+                    
+                    <!-- 已选中的数字区域 -->
+                    <div class="keyboard-selected-info">
+                        <h4><i class="fas fa-list"></i> 已选中的数字</h4>
+                        <div id="keyboard-selected-numbers" class="keyboard-selected-numbers-list">
+                            <div class="empty-selection">暂无选中数字</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 筛选功能区域 -->
+                    <div class="filter-section">
+                        <!-- 尾数筛选部分 -->
+                        <div class="filter-category">
+                            <!-- 第二行：大尾、小尾、0、1、2、3 -->
+                            <div class="filter-options compact">
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="tail-large">
+                                    <label for="tail-large">大尾</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="tail-small">
+                                    <label for="tail-small">小尾</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="tail-0">
+                                    <label for="tail-0">0尾</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="tail-1">
+                                    <label for="tail-1">1尾</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="tail-2">
+                                    <label for="tail-2">2尾</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="tail-3">
+                                    <label for="tail-3">3尾</label>
+                                </div>
+                            </div>
+                            
+                            <!-- 第三行：4、5、6、7、8、9 -->
+                            <div class="filter-options compact">
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="tail-4">
+                                    <label for="tail-4">4尾</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="tail-5">
+                                    <label for="tail-5">5尾</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="tail-6">
+                                    <label for="tail-6">6尾</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="tail-7">
+                                    <label for="tail-7">7尾</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="tail-8">
+                                    <label for="tail-8">8尾</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="tail-9">
+                                    <label for="tail-9">9尾</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 单双和颜色筛选部分 -->
+                        <div class="filter-category">
+                            <div class="divider"></div>
+                            <div class="filter-options compact">
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="odd" class="single-double">
+                                    <label for="odd">单</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="even" class="single-double">
+                                    <label for="even">双</label>
+                                </div>
+								<div class="filter-option compact">
+                                    <input type="checkbox" id="daxiao-da">
+                                    <label for="daxiao-da">大</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="daxiao-xiao">
+                                    <label for="daxiao-xiao">小</label>
+                                </div>
+								<div class="linear-divider"></div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="color-red">
+                                    <label for="color-red">红</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="color-blue">
+                                    <label for="color-blue">蓝</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="color-green">
+                                    <label for="color-green">绿</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 新增：红单双、绿单双、蓝单双筛选部分 -->
+                        <div class="filter-category">
+                            <div class="divider"></div>
+                            <div class="filter-options compact">
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="hong-dan">
+                                    <label for="hong-dan">红单</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="hong-suang">
+                                    <label for="hong-suang">红双</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="lu-dan">
+                                    <label for="lu-dan">绿单</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="lu-suang">
+                                    <label for="lu-suang">绿双</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="lan-dan">
+                                    <label for="lan-dan">蓝单</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="lan-suang">
+                                    <label for="lan-suang">蓝双</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 头数筛选部分 -->
+                        <div class="filter-category">
+                            <div class="divider"></div>
+                            <div class="filter-options compact">
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="head-0" class="head-number">
+                                    <label for="head-0">0头</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="head-1" class="head-number">
+                                    <label for="head-1">1头</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="head-2" class="head-number">
+                                    <label for="head-2">2头</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="head-3" class="head-number">
+                                    <label for="head-3">3头</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="head-4" class="head-number">
+                                    <label for="head-4">4头</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 新增：大小单双筛选部分 -->
+                        <div class="filter-category">
+                            <div class="divider"></div>
+                            <div class="filter-options compact">
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="small-single">
+                                    <label for="small-single">小单</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="small-double">
+                                    <label for="small-double">小双</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="large-single">
+                                    <label for="large-single">大单</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="large-double">
+                                    <label for="large-double">大双</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 新增：家野、天地肖筛选部分 -->
+                        <div class="filter-category">
+                            <div class="divider"></div>
+                            <div class="filter-options compact">
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="home-animal">
+                                    <label for="home-animal">家禽</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="wild-animal">
+                                    <label for="wild-animal">野兽</label>
+                                </div>
+                                <div class="linear-divider"></div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="sky-animal">
+                                    <label for="sky-animal">天肖</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="earth-animal">
+                                    <label for="earth-animal">地肖</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 新增：合单双、合大小筛选部分 -->
+                        <div class="filter-category">
+                            <div class="divider"></div>
+                            <div class="filter-options compact">
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="he-dan">
+                                    <label for="he-dan">合单</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="he-suang">
+                                    <label for="he-suang">合双</label>
+                                </div>
+                                <div class="linear-divider"></div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="he-da">
+                                    <label for="he-da">合大</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="he-xiao">
+                                    <label for="he-xiao">合小</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 新增：金木水火土筛选部分 -->
+                        <div class="filter-category">
+                            <div class="divider"></div>
+                            <div class="filter-options compact">
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="wu-jin">
+                                    <label for="wu-jin">金</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="wu-mu">
+                                    <label for="wu-mu">木</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="wu-shui">
+                                    <label for="wu-shui">水</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="wu-huo">
+                                    <label for="wu-huo">火</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="wu-tu">
+                                    <label for="wu-tu">土</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 新增：合01-合13筛选部分 -->
+                        <div class="filter-category">
+                            <div class="divider"></div>
+                            <div class="filter-options compact">
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="he-yi">
+                                    <label for="he-yi">合01</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="he-er">
+                                    <label for="he-er">合02</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="he-san">
+                                    <label for="he-san">合03</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="he-si">
+                                    <label for="he-si">合04</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="he-wu">
+                                    <label for="he-wu">合05</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="he-liu">
+                                    <label for="he-liu">合06</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="he-qi">
+                                    <label for="he-qi">合07</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="he-ba">
+                                    <label for="he-ba">合08</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="he-jiu">
+                                    <label for="he-jiu">合09</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="he-shi">
+                                    <label for="he-shi">合10</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="he-shiyi">
+                                    <label for="he-shiyi">合11</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="he-shier">
+                                    <label for="he-shier">合12</label>
+                                </div>
+                                <div class="filter-option compact">
+                                    <input type="checkbox" id="he-shisan">
+                                    <label for="he-shisan">合13</label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            `;
-            addMessage(welcomeHtml, 'bot');
-        }
+            </div>
+            
+            <div class="array-section">
+                <!-- 增强筛选部分 -->
+                <div class="enhanced-filter-panel">
+                    <div class="enhanced-filter-header">
+                        <i class="fas fa-filter"></i>
+                        <h3>增强筛选</h3>
+                    </div>
+                    
+                    <div class="enhanced-filter-grid" id="enhanced-filter-container">
+                        <!-- 动态生成的筛选行 -->
+                    </div>
+                    
+                    <div class="enhanced-filter-buttons">
+                        <button class="enhanced-filter-btn" id="apply-enhanced-filter">
+                            <i class="fas fa-check"></i> 应用筛选
+                        </button>
+                        <button class="enhanced-filter-btn export" id="export-enhanced-data">
+                            <i class="fas fa-file-export"></i> 导出数据
+                        </button>
+                        <button class="enhanced-filter-btn import" id="import-enhanced-data">
+                            <i class="fas fa-file-import"></i> 导入数据
+                        </button>
+                        <button class="enhanced-filter-btn" id="add-filter-row">
+                            <i class="fas fa-plus"></i> 添加筛选条件
+                        </button>
+                        <button class="enhanced-filter-btn select-all" id="select-all-enhanced">
+                            <i class="fas fa-check-square"></i> 全选/取消
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 杀码/出码区域 -->
+                <div class="code-operation-panel">
+                    <div class="operation-header">
+                        <i class="fas fa-exchange-alt"></i>
+                        <h3>杀码、出码</h3>
+                    </div>
+                    
+                    <div class="operation-options">
+                        <div class="option-group">
+                            <input type="radio" id="kill-code" name="operation" checked>
+                            <label for="kill-code">杀码</label>
+                        </div>
+                        <div class="option-group">
+                            <input type="radio" id="add-code" name="operation">
+                            <label for="add-code">出码</label>
+                        </div>
+                        <div class="option-group">
+                            <input type="checkbox" id="accumulate">
+                            <label for="accumulate">累计</label>
+                        </div>
+                    </div>
+                    
+                    <div class="code-input-container">
+                        <input type="text" id="code-input" class="code-input" placeholder="输入数字，如: 01 05 06 或 01,05,06">
+                    </div>
+                    
+                    <button class="execute-btn" id="execute-btn">
+                        <i class="fas fa-check"></i> 确定
+                    </button>
+                </div>
+                
+                <!-- 取相同码区域 -->
+                <div class="common-code-panel">
+                    <div class="common-code-header">
+                        <i class="fas fa-equals"></i>
+                        <h3>取相同码</h3>
+                    </div>
+                    
+                    <div class="common-code-input-group" id="common-code-group">
+                        <!-- 动态行将在这里添加 -->
+                    </div>
+                    
+                    <button class="common-code-btn" id="common-code-btn">
+                        <i class="fas fa-filter"></i> 取相同码
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>挑码器 | <span class="highlight">多功能筛选 | 杀码出码功能 | 数据导入导出</span></p>
+        </footer>
+    </div>
+    
+    <!-- 隐藏的文件输入元素用于导入 -->
+    <input type="file" id="file-input" accept=".txt" style="display: none;">
+    
+    <div class="toast" id="toast">已复制选中数字到剪贴板！</div>
 
-        function clearChat() {
-            messageList.innerHTML = '';
-            initWelcome();
-        }
-
-        // 键盘弹出时滚动消息列表到底部
-        messageInput.addEventListener('focus', () => {
-            setTimeout(() => {
-                messageList.scrollTop = messageList.scrollHeight;
-            }, 300);
+    <script>
+        // 添加初始化检查
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('挑码器开始初始化...');
+            
+            // 延迟初始化以确保DOM完全加载
+            setTimeout(initApp, 100);
         });
+        
+        function initApp() {
+            console.log('应用初始化开始...');
+            
+            // 定义字母和数字映射
+            const letters = '马蛇龙兔虎牛鼠猪狗鸡猴羊';
+            const mapping = {
+                '马': [1, 13, 25, 37, 49],
+                '蛇': [2, 14, 26, 38],
+                '龙': [3, 15, 27, 39],
+                '兔': [4, 16, 28, 40],
+                '虎': [5, 17, 29, 41],
+                '牛': [6, 18, 30, 42],
+                '鼠': [7, 19, 31, 43],
+                '猪': [8, 20, 32, 44],
+                '狗': [9, 21, 33, 45],
+                '鸡': [10, 22, 34, 46],
+                '猴': [11, 23, 35, 47],
+                '羊': [12, 24, 36, 48]
+            };
+            
+            // 定义数字颜色分组
+            const redNumbers = [1,2,7,8,12,13,18,19,23,24,29,30,34,35,40,45,46];
+            const blueNumbers = [3,4,9,10,14,15,20,25,26,31,36,37,41,42,47,48];
+            const greenNumbers = [5,6,11,16,17,21,22,27,28,32,33,38,39,43,44,49];
+            
+            // 新增筛选选项的数据
+            const homeAnimals = [1,6,8,9,10,12,13,18,20,21,22,24,25,30,32,33,34,36,37,42,44,45,46,48,49];
+            const wildAnimals = [2,3,4,5,7,11,14,15,16,17,19,23,26,27,28,29,31,35,38,39,40,41,43,47];
+            const skyAnimals = [1,3,4,6,8,11,13,15,16,18,20,23,25,27,28,30,32,35,37,39,40,42,44,47,49];
+            const earthAnimals = [2,5,7,9,10,12,14,17,19,21,22,24,26,29,31,33,34,36,38,41,43,45,46,48];
+            
+            // 新增合单双、合大小选项的数据
+            const hedans = [1,3,5,7,9,10,12,14,16,18,21,23,25,27,29,30,32,34,36,38,41,43,45,47,49];
+            const hesuangs = [2,4,6,8,11,13,15,17,19,20,22,24,26,28,31,33,35,37,39,40,42,44,46,48];
+            const hedas = [7,8,9,16,17,18,19,25,26,27,28,29,34,35,36,37,38,39,43,44,45,46,47,48,49];
+            const hexiaos = [1,2,3,4,5,6,10,11,12,13,14,15,20,21,22,23,24,30,31,32,33,40,41,42];
 
-        // 事件绑定
-        sendBtn.addEventListener('click', sendMessage);
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                sendMessage();
+			// 新增大小选项的数据
+            const xiaoshu = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24];
+            const dashu = [25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49];
+
+            // 新增金木水火土选项的数据
+            const wujins = [4,5,12,13,26,27,34,35,42,43];
+            const wumus = [8,9,16,17,24,25,38,39,46,47];
+            const wushuis = [1,14,15,22,23,30,31,44,45];
+            const wuhuos = [2,3,10,11,18,19,32,33,40,41,48,49];
+			const wutus = [6,7,20,21,28,29,36,37];
+            
+            // 新增红单双、绿单双、蓝单双选项的数据
+            const hongdans = [1,7,13,19,23,29,35,45];
+            const hongsuangs = [2,8,12,18,24,30,34,40,46];
+            const ludans = [5,11,17,21,27,33,39,43,49];
+            const lusuangs = [6,16,22,28,32,38,44];
+            const landans = [3,9,15,25,31,37,41,47];
+            const lansuangs = [4,10,14,20,26,36,42,48];
+            
+            // 新增合1-合13选项的数据
+            const heyis = [1,10];
+            const heers = [2,11,20];
+            const hesans = [3,12,21,30];
+            const hesis = [4,13,22,31,40];
+            const hewus = [5,14,23,32,41];
+            const helius = [6,15,24,33,42];
+            const heqis = [7,16,25,34,43];
+            const hebas = [8,17,26,35,44];
+            const hejius = [9,18,27,36,45];
+            const heshis = [19,28,37,46];
+            const heshiyis = [29,38,47];
+            const heshiers = [39,48];
+            const heshisans = [49];
+            
+            // 新增段数选项的数据
+            const duanNumbers = {
+                '1': [1,2,3,4,5,6,7],
+                '2': [8,9,10,11,12,13,14],
+                '3': [15,16,17,18,19,20,21],
+                '4': [22,23,24,25,26,27,28],
+                '5': [29,30,31,32,33,34,35],
+                '6': [36,37,38,39,40,41,42],
+                '7': [43,44,45,46,47,48,49]
+            };
+            
+            // 存储数字按钮的引用
+            const numberButtons = {};
+            const letterButtons = {};
+            
+            // 创建字母行 - 关键修复：确保所有12个按钮都创建
+            const letterRow = document.getElementById('letter-row');
+            console.log('创建字母行，应有12个字母:', letters.length);
+            
+            for (let letter of letters) {
+                const button = document.createElement('button');
+                button.className = 'letter-btn';
+                button.textContent = letter;
+                button.dataset.letter = letter;
+                button.setAttribute('aria-label', letter + '生肖');
+                
+                // 特别标记蛇生肖
+                if (letter === '蛇') {
+                    console.log('蛇生肖按钮已创建');
+                }
+                
+                // 存储字母按钮引用
+                letterButtons[letter] = button;
+                
+                button.addEventListener('click', function() {
+                    // 切换字母状态
+                    this.classList.toggle('inactive');
+                    
+                    // 获取字母对应的所有数字
+                    const numbers = mapping[letter];
+                    
+                    // 确定新状态（如果字母是inactive，则数字也应该设为inactive）
+                    const newState = this.classList.contains('inactive');
+                    
+                    // 更新该字母下的所有数字
+                    numbers.forEach(num => {
+                        const numBtn = numberButtons[num];
+                        if (numBtn) {
+                            if (newState) {
+                                numBtn.classList.add('inactive');
+                            } else {
+                                numBtn.classList.remove('inactive');
+                            }
+                        }
+                    });
+                    
+                    // 添加动画效果
+                    this.classList.add('pulse');
+                    setTimeout(() => this.classList.remove('pulse'), 500);
+                    
+                    // 更新选中的数字显示
+                    updateSelectedNumbers();
+                });
+                
+                letterRow.appendChild(button);
             }
-        });
-
-        clearChatBtn.addEventListener('click', clearChat);
-
-        helpBtn.addEventListener('click', () => {
-            const trial = getTrialInfo();
-            let daysLeftMsg = '';
-            if (trial.isFirst) {
-                daysLeftMsg = '剩余30天';
-            } else {
-                const daysLeftInt = Math.ceil(trial.daysLeft);
-                daysLeftMsg = `剩余${daysLeftInt}天`;
+            
+            // 创建数字行 - 确保对齐
+            for (let row = 0; row < 5; row++) {
+                const numberRow = document.getElementById(`row-${row}`);
+                
+                for (let letter of letters) {
+                    const numbers = mapping[letter];
+                    
+                    if (row < numbers.length) {
+                        const num = numbers[row];
+                        const button = document.createElement('button');
+                        button.className = 'number-btn';
+                        
+                        // 设置按钮颜色
+                        if (redNumbers.includes(num)) {
+                            button.classList.add('red-btn');
+                        } else if (blueNumbers.includes(num)) {
+                            button.classList.add('blue-btn');
+                        } else if (greenNumbers.includes(num)) {
+                            button.classList.add('green-btn');
+                        }
+                        
+                        button.textContent = num;
+                        button.dataset.number = num;
+                        button.setAttribute('aria-label', '数字' + num);
+                        
+                        // 存储按钮引用
+                        numberButtons[num] = button;
+                        
+                        button.addEventListener('click', function() {
+                            // 切换数字状态
+                            this.classList.toggle('inactive');
+                            
+                            // 添加动画效果
+                            this.classList.add('pulse');
+                            setTimeout(() => this.classList.remove('pulse'), 500);
+                            
+                            // 更新选中的数字显示
+                            updateSelectedNumbers();
+                        });
+                        
+                        numberRow.appendChild(button);
+                    } else {
+                        // 对于不存在的数字位置，添加空元素占位
+                        const emptyCell = document.createElement('div');
+                        emptyCell.className = 'empty-cell';
+                        numberRow.appendChild(emptyCell);
+                    }
+                }
             }
-            addMessage('💡 可用条件：生肖(马蛇龙兔虎牛鼠猪狗鸡猴羊)、红/蓝/绿、大/小、单/双、头0-4、尾0-9、合大/小/单/双、家/野、天/地、金木水火土、1-7段、男女、春夏秋冬、风雨雷电、琴棋书画、美丑。杀码(杀数字)。连写如“尾123”自动拆分。');
-        });
+            
+            // 存储数字的原始状态（用于筛选后恢复）
+            const numberOriginalStates = {};
+            Object.keys(numberButtons).forEach(num => {
+                numberOriginalStates[num] = numberButtons[num].classList.contains('inactive');
+            });
+            
+            // 筛选功能实现
+            function applyFilters() {
+                // 恢复所有数字到原始状态
+                Object.values(numberButtons).forEach(btn => {
+                    const num = parseInt(btn.textContent);
+                    const originalState = numberOriginalStates[num];
+                    if (originalState) {
+                        btn.classList.add('inactive');
+                    } else {
+                        btn.classList.remove('inactive');
+                    }
+                });
+                
+                // 如果有选中的筛选条件，应用筛选
+                let hasFilter = false;
+                
+                // 应用尾数筛选
+                const tailOptions = document.querySelectorAll('input[type="checkbox"][id^="tail-"]');
+                const selectedTailOptions = Array.from(tailOptions).filter(opt => opt.checked);
+                
+                if (selectedTailOptions.length > 0) {
+                    hasFilter = true;
+                    Object.values(numberButtons).forEach(btn => {
+                        const num = parseInt(btn.textContent);
+                        const lastDigit = num % 10;
+                        let match = false;
+                        
+                        for (const option of selectedTailOptions) {
+                            switch(option.id) {
+                                case 'tail-large':
+                                    if (lastDigit >= 5) match = true;
+                                    break;
+                                case 'tail-small':
+                                    if (lastDigit <= 4) match = true;
+                                    break;
+                                case 'tail-0':
+                                    if (lastDigit === 0) match = true;
+                                    break;
+                                case 'tail-1':
+                                    if (lastDigit === 1) match = true;
+                                    break;
+                                case 'tail-2':
+                                    if (lastDigit === 2) match = true;
+                                    break;
+                                case 'tail-3':
+                                    if (lastDigit === 3) match = true;
+                                    break;
+                                case 'tail-4':
+                                    if (lastDigit === 4) match = true;
+                                    break;
+                                case 'tail-5':
+                                    if (lastDigit === 5) match = true;
+                                    break;
+                                case 'tail-6':
+                                    if (lastDigit === 6) match = true;
+                                    break;
+                                case 'tail-7':
+                                    if (lastDigit === 7) match = true;
+                                    break;
+                                case 'tail-8':
+                                    if (lastDigit === 8) match = true;
+                                    break;
+                                case 'tail-9':
+                                    if (lastDigit === 9) match = true;
+                                    break;
+                            }
+                            if (match) break;
+                        }
+                        
+                        if (!match) {
+                            btn.classList.add('inactive');
+                        }
+                    });
+                }
+                
+                // 应用单双筛选
+                const oddCheckbox = document.getElementById('odd');
+                const evenCheckbox = document.getElementById('even');
+                
+                if (oddCheckbox.checked || evenCheckbox.checked) {
+                    hasFilter = true;
+                    Object.values(numberButtons).forEach(btn => {
+                        const num = parseInt(btn.textContent);
+                        const isOdd = num % 2 === 1;
+                        
+                        if ((oddCheckbox.checked && !isOdd) || (evenCheckbox.checked && isOdd)) {
+                            btn.classList.add('inactive');
+                        }
+                    });
+                }
+                
+                // 应用颜色筛选
+                const colorRed = document.getElementById('color-red');
+                const colorBlue = document.getElementById('color-blue');
+                const colorGreen = document.getElementById('color-green');
+				
+				// 应用大小筛选 - 修复版
+				const bigCheckbox = document.getElementById('daxiao-da');
+				const smallCheckbox = document.getElementById('daxiao-xiao');
 
-        // 启动
-        initWelcome();
-    })();
-</script>
+				if (bigCheckbox.checked || smallCheckbox.checked) {
+					hasFilter = true;
+					Object.values(numberButtons).forEach(btn => {
+						const num = parseInt(btn.textContent);
+						let match = false;
+						
+						// 大数：25-49
+						if (bigCheckbox.checked && dashu.includes(num)) {
+							match = true;
+						}
+						
+						// 小数：1-24  
+						if (smallCheckbox.checked && xiaoshu.includes(num)) {
+							match = true;
+						}
+						
+						// 如果选中了大或小，但都不匹配，则隐藏
+						if ((bigCheckbox.checked || smallCheckbox.checked) && !match) {
+							btn.classList.add('inactive');
+						}
+					});
+				}
+                
+                // 获取选中的颜色
+                const selectedColors = [];
+                if (colorRed.checked) selectedColors.push('red');
+                if (colorBlue.checked) selectedColors.push('blue');
+                if (colorGreen.checked) selectedColors.push('green');
+                
+                if (selectedColors.length > 0) {
+                    hasFilter = true;
+                    Object.values(numberButtons).forEach(btn => {
+                        const num = parseInt(btn.textContent);
+                        let match = false;
+                        
+                        // 检查数字颜色是否在选中范围内
+                        if (selectedColors.includes('red') && redNumbers.includes(num)) match = true;
+                        if (selectedColors.includes('blue') && blueNumbers.includes(num)) match = true;
+                        if (selectedColors.includes('green') && greenNumbers.includes(num)) match = true;
+                        
+                        if (!match) {
+                            btn.classList.add('inactive');
+                        }
+                    });
+                }
+                
+                // 应用头数筛选
+                const headCheckboxes = document.querySelectorAll('.head-number');
+                const selectedHeadOptions = Array.from(headCheckboxes).filter(opt => opt.checked);
+                
+                if (selectedHeadOptions.length > 0) {
+                    hasFilter = true;
+                    Object.values(numberButtons).forEach(btn => {
+                        const num = parseInt(btn.textContent);
+                        let match = false;
+                        
+                        for (const option of selectedHeadOptions) {
+                            switch(option.id) {
+                                case 'head-0':
+                                    if (num >= 1 && num <= 9) match = true;
+                                    break;
+                                case 'head-1':
+                                    if (num >= 10 && num <= 19) match = true;
+                                    break;
+                                case 'head-2':
+                                    if (num >= 20 && num <= 29) match = true;
+                                    break;
+                                case 'head-3':
+                                    if (num >= 30 && num <= 39) match = true;
+                                    break;
+                                case 'head-4':
+                                    if (num >= 40 && num <= 49) match = true;
+                                    break;
+                            }
+                            if (match) break;
+                        }
+                        
+                        if (!match) {
+                            btn.classList.add('inactive');
+                        }
+                    });
+                }
+                
+                // 新增：大小单双筛选
+                const smallSingle = document.getElementById('small-single').checked;
+                const smallDouble = document.getElementById('small-double').checked;
+                const largeSingle = document.getElementById('large-single').checked;
+                const largeDouble = document.getElementById('large-double').checked;
+                
+                if (smallSingle || smallDouble || largeSingle || largeDouble) {
+                    hasFilter = true;
+                    Object.values(numberButtons).forEach(btn => {
+                        const num = parseInt(btn.textContent);
+                        const isOdd = num % 2 === 1;
+                        
+                        // 小单：1-24之间的单数
+                        if (smallSingle && num >= 1 && num <= 24 && isOdd) return;
+                        
+                        // 小双：1-24之间的双数
+                        if (smallDouble && num >= 1 && num <= 24 && !isOdd) return;
+                        
+                        // 大单：25-49之间的单数
+                        if (largeSingle && num >= 25 && num <= 49 && isOdd) return;
+                        
+                        // 大双：25-49之间的双数
+                        if (largeDouble && num >= 25 && num <= 49 && !isOdd) return;
+                        
+                        // 如果不符合任何选中的条件，则隐藏
+                        if (smallSingle || smallDouble || largeSingle || largeDouble) {
+                            btn.classList.add('inactive');
+                        }
+                    });
+                }
+                
+                // 新增：家野、天地肖筛选
+                const homeAnimal = document.getElementById('home-animal').checked;
+                const wildAnimal = document.getElementById('wild-animal').checked;
+                const skyAnimal = document.getElementById('sky-animal').checked;
+                const earthAnimal = document.getElementById('earth-animal').checked;
+                
+                if (homeAnimal || wildAnimal) {
+                    hasFilter = true;
+                    Object.values(numberButtons).forEach(btn => {
+                        const num = parseInt(btn.textContent);
+                        
+                        // 家禽
+                        if (homeAnimal && homeAnimals.includes(num)) return;
+                        
+                        // 野兽
+                        if (wildAnimal && wildAnimals.includes(num)) return;
+                        
+                        // 如果不符合任何选中的条件，则隐藏
+                        if (homeAnimal || wildAnimal) {
+                            btn.classList.add('inactive');
+                        }
+                    });
+                }
+                
+                if (skyAnimal || earthAnimal) {
+                    hasFilter = true;
+                    Object.values(numberButtons).forEach(btn => {
+                        const num = parseInt(btn.textContent);
+                        
+                        // 天肖
+                        if (skyAnimal && skyAnimals.includes(num)) return;
+                        
+                        // 地肖
+                        if (earthAnimal && earthAnimals.includes(num)) return;
+                        
+                        // 如果不符合任何选中的条件，则隐藏
+                        if (skyAnimal || earthAnimal) {
+                            btn.classList.add('inactive');
+                        }
+                    });
+                }
+                
+                // 新增：合单双、合大小筛选
+                const hedan = document.getElementById('he-dan').checked;
+                const hesuang = document.getElementById('he-suang').checked;
+                const heda = document.getElementById('he-da').checked;
+                const hexiao = document.getElementById('he-xiao').checked;
+                
+                if (hedan || hesuang) {
+                    hasFilter = true;
+                    Object.values(numberButtons).forEach(btn => {
+                        const num = parseInt(btn.textContent);
+                        
+                        // 合单
+                        if (hedan && hedans.includes(num)) return;
+                        
+                        // 合双
+                        if (hesuang && hesuangs.includes(num)) return;
+                        
+                        // 如果不符合任何选中的条件，则隐藏
+                        if (hedan || hesuang) {
+                            btn.classList.add('inactive');
+                        }
+                    });
+                }
+                
+                if (heda || hexiao) {
+                    hasFilter = true;
+                    Object.values(numberButtons).forEach(btn => {
+                        const num = parseInt(btn.textContent);
+                        
+                        // 合大
+                        if (heda && hedas.includes(num)) return;
+                        
+                        // 合小
+                        if (hexiao && hexiaos.includes(num)) return;
+                        
+                        // 如果不符合任何选中的条件，则隐藏
+                        if (heda || hexiao) {
+                            btn.classList.add('inactive');
+                        }
+                    });
+                }
+                
+                // 新增：金木水火土筛选
+                const wujin = document.getElementById('wu-jin').checked;
+                const wumu = document.getElementById('wu-mu').checked;
+                const wushui = document.getElementById('wu-shui').checked;
+                const wuhuo = document.getElementById('wu-huo').checked;
+                const wutu = document.getElementById('wu-tu').checked;
+                
+                if (wujin || wumu || wushui || wuhuo || wutu) {
+                    hasFilter = true;
+                    Object.values(numberButtons).forEach(btn => {
+                        const num = parseInt(btn.textContent);
+                        
+                        // 金
+                        if (wujin && wujins.includes(num)) return;
+                        
+                        // 木
+                        if (wumu && wumus.includes(num)) return;
+                        
+                        // 水
+                        if (wushui && wushuis.includes(num)) return;
+                        
+                        // 火
+                        if (wuhuo && wuhuos.includes(num)) return;
+                        
+                        // 土
+                        if (wutu && wutus.includes(num)) return;
+                        
+                        // 如果不符合任何选中的条件，则隐藏
+                        if (wujin || wumu || wushui || wuhuo || wutu) {
+                            btn.classList.add('inactive');
+                        }
+                    });
+                }
+                
+                // 新增：合01-合13筛选
+                const heyi = document.getElementById('he-yi').checked;
+                const heer = document.getElementById('he-er').checked;
+                const hesan = document.getElementById('he-san').checked;
+                const hesi = document.getElementById('he-si').checked;
+                const hewu = document.getElementById('he-wu').checked;
+                const heliu = document.getElementById('he-liu').checked;
+                const heqi = document.getElementById('he-qi').checked;
+                const heba = document.getElementById('he-ba').checked;
+                const hejiu = document.getElementById('he-jiu').checked;
+                const heshi = document.getElementById('he-shi').checked;
+                const heshiyi = document.getElementById('he-shiyi').checked;
+                const heshier = document.getElementById('he-shier').checked;
+                const heshisan = document.getElementById('he-shisan').checked;
+                
+                if (heyi || heer || hesan || hesi || hewu || heliu || heqi || heba || hejiu || heshi || heshiyi || heshier || heshisan) {
+                    hasFilter = true;
+                    Object.values(numberButtons).forEach(btn => {
+                        const num = parseInt(btn.textContent);
+                        
+                        // 合01
+                        if (heyi && heyis.includes(num)) return;
+                        
+                        // 合02
+                        if (heer && heers.includes(num)) return;
+                        
+                        // 合03
+                        if (hesan && hesans.includes(num)) return;
+                        
+                        // 合04
+                        if (hesi && hesis.includes(num)) return;
+                        
+                        // 合05
+                        if (hewu && hewus.includes(num)) return;
+                        
+                        // 合06
+                        if (heliu && helius.includes(num)) return;
+                        
+                        // 合07
+                        if (heqi && heqis.includes(num)) return;
+                        
+                        // 合08
+                        if (heba && hebas.includes(num)) return;
+                        
+                        // 合09
+                        if (hejiu && hejius.includes(num)) return;
+                        
+                        // 合10
+                        if (heshi && heshis.includes(num)) return;
+                        
+                        // 合11
+                        if (heshiyi && heshiyis.includes(num)) return;
+                        
+                        // 合12
+                        if (heshier && heshiers.includes(num)) return;
+                        
+                        // 合13
+                        if (heshisan && heshisans.includes(num)) return;
+                        
+                        // 如果不符合任何选中的条件，则隐藏
+                        if (heyi || heer || hesan || hesi || hewu || heliu || heqi || heba || hejiu || heshi || heshiyi || heshier || heshisan) {
+                            btn.classList.add('inactive');
+                        }
+                    });
+                }
+                
+                // 新增：红单双、绿单双、蓝单双筛选
+                const hongdan = document.getElementById('hong-dan').checked;
+                const hongsuang = document.getElementById('hong-suang').checked;
+                const ludan = document.getElementById('lu-dan').checked;
+                const lusuang = document.getElementById('lu-suang').checked;
+                const landan = document.getElementById('lan-dan').checked;
+                const lansuang = document.getElementById('lan-suang').checked;
+                
+                if (hongdan || hongsuang || ludan || lusuang || landan || lansuang) {
+                    hasFilter = true;
+                    Object.values(numberButtons).forEach(btn => {
+                        const num = parseInt(btn.textContent);
+                        
+                        // 红单
+                        if (hongdan && hongdans.includes(num)) return;
+                        
+                        // 红双
+                        if (hongsuang && hongsuangs.includes(num)) return;
+                        
+                        // 绿单
+                        if (ludan && ludans.includes(num)) return;
+                        
+                        // 绿双
+                        if (lusuang && lusuangs.includes(num)) return;
+                        
+                        // 蓝单
+                        if (landan && landans.includes(num)) return;
+                        
+                        // 蓝双
+                        if (lansuang && lansuangs.includes(num)) return;
+                        
+                        // 如果不符合任何选中的条件，则隐藏
+                        if (hongdan || hongsuang || ludan || lusuang || landan || lansuang) {
+                            btn.classList.add('inactive');
+                        }
+                    });
+                }
+                
+                // 应用增强筛选
+                applyEnhancedFilters();
+                
+                // 如果没有筛选条件，恢复原始状态
+                if (!hasFilter) {
+                    Object.values(numberButtons).forEach(btn => {
+                        const num = parseInt(btn.textContent);
+                        const originalState = numberOriginalStates[num];
+                        if (originalState) {
+                            btn.classList.add('inactive');
+                        } else {
+                            btn.classList.remove('inactive');
+                        }
+                    });
+                }
+                
+                // 更新选中的数字显示
+                updateSelectedNumbers();
+            }
+            
+            // 为所有筛选选项添加事件监听
+            const filterOptions = document.querySelectorAll('.filter-section input[type="checkbox"]');
+            filterOptions.forEach(option => {
+                option.addEventListener('change', applyFilters);
+            });
+            
+            // 增强筛选条件类型
+            const filterTypes = [
+                { id: 'shengxiao', label: '生肖', placeholder: '输入生肖' },
+                { id: 'daxiao', label: '大小数', placeholder: '输入大或小' },
+                { id: 'color', label: '波色', placeholder: '输入波色' },
+                { id: 'tail', label: '尾数', placeholder: '输入尾数' },
+                { id: 'head', label: '头数', placeholder: '输入头数' },
+                { id: 'heshu', label: '合数', placeholder: '输入合单双、合大小' },
+                { id: 'jiaye', label: '家野单双', placeholder: '输入家野单双' },
+                { id: 'tiandi', label: '天地肖', placeholder: '输入天地肖' },
+                { id: 'wuxing', label: '五行', placeholder: '输入五行' },
+                { id: 'duanshu', label: '段数', placeholder: '输入段数(1-7)' }
+            ];
+            
+            // 增强筛选容器
+            const enhancedFilterContainer = document.getElementById('enhanced-filter-container');
+            let filterRowCounter = 0;
+            
+            // 创建增强筛选行
+            function createEnhancedFilterRow(typeId = '', value = '') {
+                const row = document.createElement('div');
+                row.className = 'filter-input-group single-filter-row';
+                row.dataset.id = filterRowCounter++;
+                
+                const filterType = filterTypes.find(t => t.id === typeId) || filterTypes[0];
+                
+                row.innerHTML = `
+                    <div class="filter-input-row">
+                        <input type="checkbox" class="filter-input-checkbox" checked>
+                        <select class="filter-input filter-type-select">
+                            ${filterTypes.map(t => 
+                                `<option value="${t.id}" ${t.id === typeId ? 'selected' : ''}>${t.label}</option>`
+                            ).join('')}
+                        </select>
+                        <input type="text" class="filter-input" value="${value}" placeholder="${filterType.placeholder}">
+                        <div class="filter-row-actions">
+                            <button class="filter-action-btn add-row-btn" title="添加行">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <button class="filter-action-btn remove-row-btn" title="删除行">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                // 添加事件监听器
+                const addBtn = row.querySelector('.add-row-btn');
+                addBtn.addEventListener('click', function() {
+                    const newRow = createEnhancedFilterRow();
+                    enhancedFilterContainer.appendChild(newRow);
+                });
+                
+                const removeBtn = row.querySelector('.remove-row-btn');
+                removeBtn.addEventListener('click', function() {
+                    if (enhancedFilterContainer.children.length > 1) {
+                        row.remove();
+                        showToast('筛选行已删除');
+                    } else {
+                        showToast('至少需要保留一行');
+                    }
+                });
+                
+                // 类型选择变化事件
+                const typeSelect = row.querySelector('.filter-type-select');
+                const input = row.querySelector('input[type="text"]');
+                typeSelect.addEventListener('change', function() {
+                    const selectedType = filterTypes.find(t => t.id === this.value);
+                    if (selectedType) {
+                        input.placeholder = selectedType.placeholder;
+                    }
+                });
+                
+                return row;
+            }
+            
+            // 初始化一行增强筛选
+            enhancedFilterContainer.appendChild(createEnhancedFilterRow());
+            
+            // 添加筛选条件按钮
+            document.getElementById('add-filter-row').addEventListener('click', function() {
+                const newRow = createEnhancedFilterRow();
+                enhancedFilterContainer.appendChild(newRow);
+                showToast('已添加筛选条件');
+            });
+            
+            // 全选/取消按钮功能
+            document.getElementById('select-all-enhanced').addEventListener('click', function() {
+                const checkboxes = document.querySelectorAll('.filter-input-checkbox');
+                const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
+                
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = !allChecked;
+                });
+                
+                showToast(allChecked ? '已取消全选' : '已全选所有筛选条件');
+            });
+            
+            // 应用增强筛选
+            function applyEnhancedFilters() {
+                const rows = enhancedFilterContainer.querySelectorAll('.filter-input-group');
+                let hasEnhancedFilter = false;
+                
+                rows.forEach(row => {
+                    const checkbox = row.querySelector('.filter-input-checkbox');
+                    const typeSelect = row.querySelector('.filter-type-select');
+                    const input = row.querySelector('input[type="text"]');
+                    
+                    if (checkbox.checked && input.value.trim() !== '') {
+                        hasEnhancedFilter = true;
+                        const filterType = typeSelect.value;
+                        const filterValue = input.value.trim();
+                        
+                        // 根据筛选类型应用筛选
+                        applySingleEnhancedFilter(filterType, filterValue);
+                    }
+                });
+                
+                return hasEnhancedFilter;
+            }
+            
+            // 应用单个增强筛选
+            function applySingleEnhancedFilter(type, value) {
+                Object.values(numberButtons).forEach(btn => {
+                    const num = parseInt(btn.textContent);
+                    let match = false;
+                    
+                    switch(type) {
+                        case 'shengxiao':
+                            // 生肖筛选逻辑
+                            for (let char of value) {
+                                if (mapping[char] && mapping[char].includes(num)) {
+                                    match = true;
+                                    break;
+                                }
+                            }
+                            break;
+                            
+                        case 'daxiao':
+                            // 大小数筛选逻辑：1-24为小，25-49为大
+                            if (value.includes('大') && num >= 25 && num <= 49) match = true;
+                            if (value.includes('小') && num >= 1 && num <= 24) match = true;
+                            break;
+                            
+                        case 'color':
+                            // 波色筛选逻辑
+                            if (value.includes('红') && redNumbers.includes(num)) match = true;
+                            if (value.includes('蓝') && blueNumbers.includes(num)) match = true;
+                            if (value.includes('绿') && greenNumbers.includes(num)) match = true;
+                            break;
+                            
+                        case 'tail':
+                            // 尾数筛选逻辑
+                            const lastDigit = num % 10;
+                            if (value.includes(lastDigit.toString())) match = true;
+                            break;
+                            
+                        case 'head':
+                            // 头数筛选逻辑
+                            const head = Math.floor(num / 10);
+                            if (value.includes(head.toString())) match = true;
+                            break;
+                            
+                        case 'heshu':
+                            // 合数筛选逻辑
+                            const sum = Math.floor(num / 10) + (num % 10);
+                            if (value.includes('单') && sum % 2 === 1) match = true;
+                            if (value.includes('双') && sum % 2 === 0) match = true;
+                            if (value.includes('大') && sum >= 7) match = true;
+                            if (value.includes('小') && sum <= 6) match = true;
+                            break;
+                            
+                        case 'jiaye':
+                            // 家野单双筛选逻辑
+                            if (value.includes('家') && homeAnimals.includes(num)) match = true;
+                            if (value.includes('野') && wildAnimals.includes(num)) match = true;
+                            if (value.includes('单') && num % 2 === 1) match = true;
+                            if (value.includes('双') && num % 2 === 0) match = true;
+                            break;
+                            
+                        case 'tiandi':
+                            // 天地肖筛选逻辑
+                            if (value.includes('天') && skyAnimals.includes(num)) match = true;
+                            if (value.includes('地') && earthAnimals.includes(num)) match = true;
+                            break;
+                            
+                        case 'wuxing':
+                            // 五行筛选逻辑
+                            if (value.includes('金') && wujins.includes(num)) match = true;
+                            if (value.includes('木') && wumus.includes(num)) match = true;
+                            if (value.includes('水') && wushuis.includes(num)) match = true;
+                            if (value.includes('火') && wuhuos.includes(num)) match = true;
+                            if (value.includes('土') && wutus.includes(num)) match = true;
+                            break;
+                            
+                        case 'duanshu':
+                            // 段数筛选逻辑
+                            let selectedDuan = [];
+                            
+                            // 处理连字符格式(如1-3)
+                            if (value.includes('-')) {
+                                const range = value.split('-');
+                                if (range.length === 2) {
+                                    const start = parseInt(range[0]);
+                                    const end = parseInt(range[1]);
+                                    if (!isNaN(start) && !isNaN(end)) {
+                                        for (let i = start; i <= end; i++) {
+                                            if (i >= 1 && i <= 7) {
+                                                selectedDuan.push(i.toString());
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                // 处理逗号或空格分隔格式
+                                selectedDuan = value.split(/[\s,]+/).filter(v => v);
+                            }
+                            
+                            // 检查数字是否在选中的段数中
+                            for (let duan of selectedDuan) {
+                                if (duanNumbers[duan] && duanNumbers[duan].includes(num)) {
+                                    match = true;
+                                    break;
+                                }
+                            }
+                            break;
+                    }
+                    
+                    if (!match) {
+                        btn.classList.add('inactive');
+                    }
+                });
+            }
+            
+            // 增强筛选功能
+            document.getElementById('apply-enhanced-filter').addEventListener('click', function() {
+                // 恢复所有数字到原始状态
+                Object.values(numberButtons).forEach(btn => {
+                    const num = parseInt(btn.textContent);
+                    const originalState = numberOriginalStates[num];
+                    if (originalState) {
+                        btn.classList.add('inactive');
+                    } else {
+                        btn.classList.remove('inactive');
+                    }
+                });
+                
+                // 应用增强筛选
+                const hasEnhancedFilter = applyEnhancedFilters();
+                
+                if (!hasEnhancedFilter) {
+                    showToast('请至少启用一个筛选条件并输入值');
+                } else {
+                    showToast('已应用增强筛选条件');
+                }
+                
+                // 更新数字的原始状态
+                Object.keys(numberButtons).forEach(num => {
+                    numberOriginalStates[num] = numberButtons[num].classList.contains('inactive');
+                });
+                
+                // 更新选中的数字显示
+                updateSelectedNumbers();
+            });
+            
+            // 导出数据功能
+            document.getElementById('export-enhanced-data').addEventListener('click', function() {
+                // 收集增强筛选数据
+                const filterData = [];
+                const rows = enhancedFilterContainer.querySelectorAll('.filter-input-group');
+                
+                rows.forEach(row => {
+                    const checkbox = row.querySelector('.filter-input-checkbox');
+                    const typeSelect = row.querySelector('.filter-type-select');
+                    const input = row.querySelector('input[type="text"]');
+                    
+                    filterData.push({
+                        enabled: checkbox.checked,
+                        type: typeSelect.value,
+                        value: input.value
+                    });
+                });
+                
+                // 收集相同码区域数据
+                const commonCodeData = [];
+                const commonCodeRows = document.querySelectorAll('.common-code-input-row');
+                
+                commonCodeRows.forEach(row => {
+                    const checkbox = row.querySelector('.array-checkbox');
+                    const input = row.querySelector('.common-code-input');
+                    const starBtn = row.querySelector('.star-btn');
+                    
+                    commonCodeData.push({
+                        enabled: checkbox.checked,
+                        value: input.value,
+                        starred: starBtn.classList.contains('active')
+                    });
+                });
+                
+                // 创建包含所有数据的对象
+                const exportData = {
+                    enhancedFilters: filterData,
+                    commonCodeInputs: commonCodeData
+                };
+                
+                // 创建数据字符串
+                const dataStr = JSON.stringify(exportData, null, 2);
+                
+                // 创建Blob对象
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                // 创建下载链接
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'filter_data.json';
+                document.body.appendChild(a);
+                a.click();
+                
+                // 清理
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+                
+                showToast('筛选数据已导出');
+            });
+            
+            // 导入数据功能
+            document.getElementById('import-enhanced-data').addEventListener('click', function() {
+                // 创建文件输入元素
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = '.json';
+                
+                fileInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        try {
+                            const data = JSON.parse(event.target.result);
+                            
+                            // 清空现有行
+                            enhancedFilterContainer.innerHTML = '';
+                            
+                            // 添加新行
+                            if (data.enhancedFilters) {
+                                data.enhancedFilters.forEach(filter => {
+                                    const newRow = createEnhancedFilterRow(filter.type, filter.value);
+                                    const checkbox = newRow.querySelector('.filter-input-checkbox');
+                                    checkbox.checked = filter.enabled;
+                                    enhancedFilterContainer.appendChild(newRow);
+                                });
+                            }
+                            
+                            // 导入相同码区域数据
+                            if (data.commonCodeInputs) {
+                                // 清空现有相同码行
+                                const commonCodeGroup = document.getElementById('common-code-group');
+                                commonCodeGroup.innerHTML = '';
+                                
+                                // 添加新行
+                                data.commonCodeInputs.forEach(inputData => {
+                                    const newRow = createCommonCodeRow();
+                                    const checkbox = newRow.querySelector('.array-checkbox');
+                                    const input = newRow.querySelector('.common-code-input');
+                                    const starBtn = newRow.querySelector('.star-btn');
+                                    
+                                    checkbox.checked = inputData.enabled;
+                                    input.value = inputData.value || '';
+                                    
+                                    if (inputData.starred) {
+                                        starBtn.classList.add('active');
+                                        starBtn.querySelector('i').className = 'fas fa-star';
+                                    }
+                                    
+                                    commonCodeGroup.appendChild(newRow);
+                                });
+                            }
+                            
+                            showToast('筛选数据已导入');
+                        } catch (error) {
+                            console.error('解析JSON失败:', error);
+                            showToast('导入失败：文件格式错误');
+                        }
+                    };
+                    
+                    reader.readAsText(file);
+                });
+                
+                fileInput.click();
+            });
+            
+            // 修改复制功能的代码段
+            document.getElementById('copy-btn').addEventListener('click', function() {
+                const activeButtons = Object.values(numberButtons)
+                    .filter(btn => !btn.classList.contains('inactive'))
+                    .map(btn => parseInt(btn.textContent))
+                    .sort((a, b) => a - b);
+                
+                if (activeButtons.length > 0) {
+                    const text = activeButtons.join('.');
+                    
+                    // 使用更兼容的复制方法
+                    copyToClipboard(text);
+                } else {
+                    showToast('没有选中的数字可复制');
+                }
+            });
+
+            // 添加通用的复制到剪贴板函数
+            function copyToClipboard(text) {
+                // 方法1: 使用新的 Clipboard API (现代浏览器)
+                if (navigator.clipboard && window.isSecureContext) {
+                    navigator.clipboard.writeText(text)
+                        .then(() => {
+                            showToast('已复制选中数字到剪贴板！');
+                        })
+                        .catch(err => {
+                            // 如果新API失败，回退到旧方法
+                            fallbackCopyToClipboard(text);
+                        });
+                } else {
+                    // 如果不支持新的API，直接使用旧方法
+                    fallbackCopyToClipboard(text);
+                }
+            }
+
+            // 备选复制方法
+            function fallbackCopyToClipboard(text) {
+                // 创建一个临时的 textarea 元素
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                
+                // 确保不会滚动到视图中
+                textArea.style.position = 'fixed';
+                textArea.style.top = '0';
+                textArea.style.left = '0';
+                textArea.style.width = '2em';
+                textArea.style.height = '2em';
+                textArea.style.padding = '0';
+                textArea.style.border = 'none';
+                textArea.style.outline = 'none';
+                textArea.style.boxShadow = 'none';
+                textArea.style.background = 'transparent';
+                
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                try {
+                    // 尝试执行复制命令
+                    const successful = document.execCommand('copy');
+                    if (successful) {
+                        showToast('已复制选中数字到剪贴板！');
+                    } else {
+                        showToast('复制失败，请手动复制以下数字：' + text);
+                    }
+                } catch (err) {
+                    console.error('复制失败:', err);
+                    showToast('复制失败，请手动复制以下数字：' + text);
+                } finally {
+                    // 清理临时元素
+                    document.body.removeChild(textArea);
+                }
+            }
+            
+            // 复位功能
+            document.getElementById('reset-btn').addEventListener('click', function() {
+                // 重置所有字母按钮
+                Object.values(letterButtons).forEach(btn => {
+                    btn.classList.remove('inactive');
+                });
+                
+                // 重置所有数字按钮
+                Object.values(numberButtons).forEach(btn => {
+                    btn.classList.remove('inactive');
+                });
+                
+                // 取消所有筛选
+                document.querySelectorAll('.filter-section input[type="checkbox"]').forEach(opt => {
+                    opt.checked = false;
+                });
+                
+                // 重置原始状态
+                Object.keys(numberOriginalStates).forEach(num => {
+                    numberOriginalStates[num] = false;
+                });
+                
+                // 更新选中的数字显示
+                updateSelectedNumbers();
+                
+                // 添加动画效果
+                this.classList.add('pulse');
+                setTimeout(() => this.classList.remove('pulse'), 500);
+                
+                showToast('已重置所有选择');
+            });
+            
+            // === 新增杀码/出码功能 ===
+            const executeBtn = document.getElementById('execute-btn');
+            executeBtn.addEventListener('click', function() {
+                const input = document.getElementById('code-input').value.trim();
+                if (!input) {
+                    showToast('请输入数字');
+                    return;
+                }
+                
+                // 解析输入的数字（支持多种分隔符）
+                const numbers = parseInputNumbers(input);
+                if (numbers.length === 0) {
+                    showToast('未识别到有效数字');
+                    return;
+                }
+                
+                const isKillMode = document.getElementById('kill-code').checked;
+                const isAccumulate = document.getElementById('accumulate').checked;
+                
+                // 处理数字
+                processNumbers(numbers, isKillMode, isAccumulate);
+                
+                // 更新显示
+                updateSelectedNumbers();
+                showToast(`已${isKillMode ? '杀码' : '出码'}: ${numbers.join(', ')}`);
+            });
+            
+            // 解析输入的数字
+            function parseInputNumbers(input) {
+                // 支持空格、逗号、句号、分号等分隔符
+                const numberStrings = input.split(/[\s,.;、，。；]+/);
+                const numbers = [];
+                
+                for (const str of numberStrings) {
+                    if (!str) continue;
+                    
+                    // 尝试解析数字
+                    let num = parseInt(str);
+                    if (isNaN(num)) {
+                        // 尝试移除非数字字符（如"01"）
+                        const cleanStr = str.replace(/[^\d]/g, '');
+                        if (cleanStr) {
+                            num = parseInt(cleanStr);
+                        }
+                    }
+                    
+                    // 确保是有效的1-49之间的数字
+                    if (!isNaN(num) && num >= 1 && num <= 49) {
+                        numbers.push(num);
+                    }
+                }
+                
+                return numbers;
+            }
+            
+            // 处理数字
+            function processNumbers(numbers, isKillMode, isAccumulate) {
+                // 如果不是累计模式，先重置所有数字
+                if (!isAccumulate) {
+                    Object.values(numberButtons).forEach(btn => {
+                        if (isKillMode) {
+                            // 杀码模式：全部激活（未杀）
+                            btn.classList.remove('inactive');
+                        } else {
+                            // 出码模式：全部禁用（未出）
+                            btn.classList.add('inactive');
+                        }
+                    });
+                }
+                
+                // 处理每个数字
+                numbers.forEach(num => {
+                    const btn = numberButtons[num];
+                    if (btn) {
+                        if (isKillMode) {
+                            // 杀码：设为inactive
+                            btn.classList.add('inactive');
+                        } else {
+                            // 出码：设为active
+                            btn.classList.remove('inactive');
+                        }
+                    }
+                });
+                
+                // 更新数字的原始状态
+                Object.keys(numberButtons).forEach(num => {
+                    numberOriginalStates[num] = numberButtons[num].classList.contains('inactive');
+                });
+            }
+            
+            // 更新选中的数字显示和计数
+            function updateSelectedNumbers() {
+                // 获取所有非灰色的数字按钮
+                const activeButtons = Object.values(numberButtons)
+                    .filter(btn => !btn.classList.contains('inactive'));
+                
+                // 更新计数标签
+                const countLabel = document.getElementById('selected-count');
+                countLabel.textContent = `已选中: ${activeButtons.length} 个数字`;
+                
+                // 按颜色分组
+                const allSelected = [];
+                
+                activeButtons.forEach(btn => {
+                    const num = parseInt(btn.textContent);
+                    allSelected.push(num);
+                });
+                
+                // 更新左侧键盘区域选中的数字列表
+                const keyboardSelectedContainer = document.getElementById('keyboard-selected-numbers');
+                keyboardSelectedContainer.innerHTML = '';
+                
+                if (allSelected.length > 0) {
+                    // 排序
+                    allSelected.sort((a, b) => a - b);
+                    
+                    // 创建数字标签
+                    allSelected.forEach(num => {
+                        const chip = document.createElement('div');
+                        chip.className = 'keyboard-number-chip';
+                        chip.textContent = num;
+                        keyboardSelectedContainer.appendChild(chip);
+                    });
+                } else {
+                    const emptyMsg = document.createElement('div');
+                    emptyMsg.className = 'empty-selection';
+                    emptyMsg.textContent = '暂无选中数字';
+                    keyboardSelectedContainer.appendChild(emptyMsg);
+                }
+            }
+            
+            // 显示提示信息
+            function showToast(message) {
+                const toast = document.getElementById('toast');
+                toast.textContent = message;
+                toast.classList.add('show');
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+            
+            // ===== 新增：相同码功能 =====
+            const commonCodeGroup = document.getElementById('common-code-group');
+            let commonCodeCounter = 1;
+            
+            // 创建新行
+            function createCommonCodeRow() {
+                const row = document.createElement('div');
+                row.className = 'common-code-input-row';
+                row.dataset.id = commonCodeCounter++;
+                
+                row.innerHTML = `
+                    <button class="star-btn" title="标记重要">
+                        <i class="far fa-star"></i>
+                    </button>
+                    <input type="checkbox" class="array-checkbox" checked>
+                    <input type="text" class="common-code-input" placeholder="输入数字，如: 01 05 06 或 01,05,06">
+                    <button class="array-action-btn add-btn" title="添加新行">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <button class="array-action-btn remove-btn" title="删除此行">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                `;
+                
+                // 添加事件监听器
+                const starBtn = row.querySelector('.star-btn');
+                starBtn.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                    const icon = this.querySelector('i');
+                    if (this.classList.contains('active')) {
+                        icon.className = 'fas fa-star';
+                    } else {
+                        icon.className = 'far fa-star';
+                    }
+                });
+                
+                const addBtn = row.querySelector('.add-btn');
+                addBtn.addEventListener('click', function() {
+                    const newRow = createCommonCodeRow();
+                    commonCodeGroup.appendChild(newRow);
+                });
+                
+                const removeBtn = row.querySelector('.remove-btn');
+                removeBtn.addEventListener('click', function() {
+                    if (commonCodeGroup.children.length > 1) {
+                        row.remove();
+                        showToast('行已删除');
+                    } else {
+                        showToast('至少需要保留一行');
+                    }
+                });
+                
+                return row;
+            }
+            
+            // 初始化两行
+            for (let i = 0; i < 2; i++) {
+                commonCodeGroup.appendChild(createCommonCodeRow());
+            }
+            
+            // 相同码功能按钮
+            document.getElementById('common-code-btn').addEventListener('click', function() {
+                // 获取所有选中的数组行
+                const selectedArrays = [];
+                const rows = commonCodeGroup.querySelectorAll('.common-code-input-row');
+                
+                // 首先获取当前筛选后的数字（作为第一个数组）
+                const filteredNumbers = Object.values(numberButtons)
+                    .filter(btn => !btn.classList.contains('inactive'))
+                    .map(btn => parseInt(btn.textContent));
+                
+                // 将当前筛选结果作为第一个数组
+                selectedArrays.push(filteredNumbers.join(' '));
+                
+                rows.forEach(row => {
+                    const checkbox = row.querySelector('.array-checkbox');
+                    const input = row.querySelector('.common-code-input');
+                    
+                    if (checkbox.checked && input.value.trim() !== '') {
+                        selectedArrays.push(input.value.trim());
+                    }
+                });
+                
+                // 如果没有选中的数组，则使用所有数组
+                if (selectedArrays.length === 1) { // 只有筛选结果数组
+                    rows.forEach(row => {
+                        const input = row.querySelector('.common-code-input');
+                        if (input.value.trim() !== '') {
+                            selectedArrays.push(input.value.trim());
+                        }
+                    });
+                }
+                
+                // 如果没有有效的数组，则返回
+                if (selectedArrays.length <= 1) { // 只有筛选结果数组
+                    showToast('请至少输入一个有效的数组');
+                    return;
+                }
+                
+                // 解析每个数组中的数字
+                const numberSets = selectedArrays.map(str => {
+                    const set = new Set();
+                    const numbers = parseInputNumbers(str);
+                    numbers.forEach(num => set.add(num));
+                    return set;
+                });
+                
+                // 计算交集（共同出现的数字）
+                let intersection = new Set(numberSets[0]);
+                for (let i = 1; i < numberSets.length; i++) {
+                    const tempSet = new Set();
+                    for (let num of intersection) {
+                        if (numberSets[i].has(num)) {
+                            tempSet.add(num);
+                        }
+                    }
+                    intersection = tempSet;
+                }
+                
+                // 将交集数字设置为激活状态，其他数字设为非激活
+                Object.values(numberButtons).forEach(btn => {
+                    const num = parseInt(btn.textContent);
+                    if (intersection.has(num)) {
+                        btn.classList.remove('inactive');
+                    } else {
+                        btn.classList.add('inactive');
+                    }
+                });
+                
+                // 更新数字的原始状态
+                Object.keys(numberButtons).forEach(num => {
+                    numberOriginalStates[num] = numberButtons[num].classList.contains('inactive');
+                });
+                
+                // 更新选中的数字显示
+                updateSelectedNumbers();
+                
+                // 添加动画效果
+                this.classList.add('pulse');
+                setTimeout(() => this.classList.remove('pulse'), 500);
+                
+                showToast(`找到 ${intersection.size} 个相同数字`);
+            });
+            
+            // 初始化显示
+            updateSelectedNumbers();
+            
+            // 关键修复：确保所有列都显示
+            setTimeout(function() {
+                console.log('检查显示状态...');
+                
+                // 检查字母按钮数量
+                const letterBtns = document.querySelectorAll('.letter-btn');
+                console.log('字母按钮数量:', letterBtns.length, '应有12个');
+                
+                // 检查数字按钮数量（排除空单元格）
+                const numberBtns = document.querySelectorAll('.number-btn');
+                console.log('数字按钮数量:', numberBtns.length, '应有49个');
+                
+                // 强制所有按钮显示
+                letterBtns.forEach((btn, index) => {
+                    btn.style.display = 'flex';
+                    btn.style.visibility = 'visible';
+                    btn.style.opacity = '1';
+                    btn.style.flex = '1';
+                    btn.style.minWidth = '0';
+                    btn.style.maxWidth = '100%';
+                    
+                    if (index >= 10) {
+                        console.log(`第${index+1}个字母按钮:`, btn.textContent);
+                    }
+                });
+                
+                numberBtns.forEach(btn => {
+                    btn.style.display = 'flex';
+                    btn.style.visibility = 'visible';
+                    btn.style.flex = '1';
+                    btn.style.minWidth = '0';
+                    btn.style.maxWidth = '100%';
+                });
+                
+                console.log('挑码器初始化完成！');
+                
+                // 添加触摸事件支持
+                document.body.addEventListener('touchstart', function() {}, {passive: true});
+                
+            }, 500);
+        }
+    </script>
 </body>
 </html>
