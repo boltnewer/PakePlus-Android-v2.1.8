@@ -23,7 +23,6 @@
             overflow-x: hidden;
         }
 
-        /* 加载动画 */
         #loading {
             position: fixed;
             top: 0;
@@ -64,7 +63,7 @@
             border-radius: 20px;
             box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
             overflow: hidden;
-            display: none;  /* 初始隐藏，加载完成后显示 */
+            display: none;
         }
 
         .card-inner {
@@ -129,20 +128,17 @@
             border: 1px solid #e9edf2;
             padding: 10px;
         }
-
-        /* 强制一行显示 + 横向滚动 */
         .header-main-row {
             display: flex;
             align-items: center;
             gap: 8px;
-            flex-wrap: nowrap;          /* 禁止换行 */
-            overflow-x: auto;           /* 横向滚动 */
+            flex-wrap: nowrap;
+            overflow-x: auto;
             -webkit-overflow-scrolling: touch;
-            padding-bottom: 4px;        /* 留出滚动条空间 */
+            padding-bottom: 4px;
             margin-bottom: 8px;
             scrollbar-width: thin;
         }
-        /* 各元素固定宽度/不缩小 */
         .header-index {
             flex-shrink: 0;
             background: #3b82f6;
@@ -195,8 +191,6 @@
             border: none;
             transition: 0.2s;
         }
-
-        /* 公式行可以换行（单独一行） */
         .formula-row {
             display: flex;
             align-items: center;
@@ -589,7 +583,7 @@
 
     <div class="glass-card" id="appContainer">
         <div class="card-inner">
-            <div class="hero-title">📋 简易表格</div>
+            <div class="hero-title">📊 简易表格</div>
             <div class="top-bar">
                 <div class="form-group">
                     <label>📌 主标题</label>
@@ -602,7 +596,6 @@
                 <div class="top-bar-buttons">
                     <button id="importExcelBtn" class="btn btn-import">📂 导入表格</button>
                     <button id="fillContentBtn" class="btn btn-primary">✍️ 填写内容</button>
-                    <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" style="display: none;">
                 </div>
             </div>
             <div class="headers-manager">
@@ -639,8 +632,8 @@
                     <div class="image-preview-container" id="imagePreviewContainer"></div>
                 </div>
                 <div class="action-group">
-                    <button id="genExcelBtn" class="btn btn-success">📎 生成并分享 Excel</button>
-                    <button id="genPdfBtn" class="btn btn-primary" style="background: #4b5563;">📑 生成并分享 PDF</button>
+                    <button id="genExcelBtn" class="btn btn-success">📎 生成并打开 Excel</button>
+                    <button id="genPdfBtn" class="btn btn-primary" style="background: #4b5563;">📑 生成并打开 PDF</button>
                 </div>
             </div>
         </div>
@@ -657,7 +650,6 @@
         </div>
     </div>
 
-    <!-- 外部脚本使用 defer，不阻塞渲染 -->
     <script defer src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -665,7 +657,6 @@
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
     <script>
-        // 全局变量定义
         let appData = {
             mainTitle: "项目数据统计表",
             maker: "",
@@ -673,7 +664,7 @@
                 { name: "项目", sumEnabled: false, enableFormula: false, formula: "" },
                 { name: "单价", sumEnabled: false, enableFormula: false, formula: "" },
                 { name: "数量", sumEnabled: false, enableFormula: false, formula: "" },
-                { name: "总价", sumEnabled: true, enableFormula: true, formula: "B*C" }
+                { name: "总价", sumEnabled: true, enableFormula: true, formula: "(单价)*(数量)" }
             ],
             rows: [
                 ["项目一", "100", "5", ""],
@@ -681,14 +672,12 @@
             ]
         };
         let attachedImage = null;
-
-        // DOM 元素引用
-        let mainTitleInput, makerInput, headersListContainer, fillContentBtn, importExcelBtn, excelFileInput;
+        let mainTitleInput, makerInput, headersListContainer, fillContentBtn, importExcelBtn;
         let dataSection, displayMainTitleSpan, displayMakerSpan, headerCountSpan, headersPreviewRow, dataRowsContainer;
         let genExcelBtn, genPdfBtn, uploadImageBtn, deleteImageBtn, imagePreviewContainer;
         let modal, modalInput, currentEditInput;
 
-        // ==================== 辅助函数 ====================
+        // ---------- 辅助函数 ----------
         function updateImagePreview() {
             imagePreviewContainer.innerHTML = '';
             if (attachedImage) {
@@ -1293,36 +1282,30 @@
             URL.revokeObjectURL(url);
         }
 
-        async function tryShareAndDownload(blob, fileName, mimeType) {
-            if (navigator.share && navigator.canShare && navigator.canShare({ files: [] }) && window.location.protocol !== 'file:') {
-                try {
-                    const file = new File([blob], fileName, { type: mimeType });
-                    await navigator.share({ title: appData.mainTitle, text: `分享表格: ${appData.mainTitle}`, files: [file] });
-                    return true;
-                } catch (err) { console.log('分享失败或取消:', err); }
-            } else {
-                console.log('当前环境不支持 Web Share API，自动下载');
-            }
-            downloadFile(blob, fileName);
-            return false;
-        }
-
+        // 新功能：生成并打开 Excel（下载）
         async function handleGenerateExcel() {
             const toast = showTempToast("生成Excel...");
             try {
                 const blob = await generateExcelWithImage();
-                await tryShareAndDownload(blob, `${appData.mainTitle.replace(/[\\/:*?"<>|]/g, '')}_表格.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+                downloadFile(blob, `${appData.mainTitle.replace(/[\\/:*?"<>|]/g, '')}_表格.xlsx`);
+                toast(); // 关闭提示
+                showTempToast("已下载，请在文件管理中查看");
             } catch (err) {
                 console.error(err);
                 alert("生成失败：" + err.message);
             } finally { if(toast) toast(); }
         }
 
+        // 新功能：生成并打开 PDF（新窗口预览）
         async function handleGeneratePDF() {
             const toast = showTempToast("生成PDF...");
             try {
                 const blob = await generatePDFWithImage();
-                await tryShareAndDownload(blob, `${appData.mainTitle.replace(/[\\/:*?"<>|]/g, '')}_报告.pdf`, 'application/pdf');
+                const url = URL.createObjectURL(blob);
+                // 在新窗口打开 PDF（大多数浏览器会直接预览）
+                window.open(url, '_blank');
+                setTimeout(() => URL.revokeObjectURL(url), 60000);
+                toast();
             } catch (err) { 
                 alert("PDF生成失败：" + err.message);
             } finally { if(toast) toast(); }
@@ -1345,14 +1328,28 @@
             return () => { if (toast && toast.remove) toast.remove(); };
         }
 
-        // 初始化入口
+        // 导入触发函数（动态创建 file input）
+        function triggerFileImport() {
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = '.xlsx, .xls, .csv';
+            fileInput.style.display = 'none';
+            fileInput.onchange = function(e) {
+                if (e.target.files.length > 0) {
+                    importExcel(e.target.files[0]);
+                }
+                document.body.removeChild(fileInput);
+            };
+            document.body.appendChild(fileInput);
+            fileInput.click();
+        }
+
         function init() {
             mainTitleInput = document.getElementById('mainTitleInput');
             makerInput = document.getElementById('makerInput');
             headersListContainer = document.getElementById('headersListContainer');
             fillContentBtn = document.getElementById('fillContentBtn');
             importExcelBtn = document.getElementById('importExcelBtn');
-            excelFileInput = document.getElementById('excelFileInput');
             dataSection = document.getElementById('dataSection');
             displayMainTitleSpan = document.getElementById('displayMainTitleSpan');
             displayMakerSpan = document.getElementById('displayMakerSpan');
@@ -1395,8 +1392,7 @@
                 deleteImageBtn.style.display = 'none';
             });
             fillContentBtn.addEventListener('click', fillContent);
-            importExcelBtn.addEventListener('click', () => excelFileInput.click());
-            excelFileInput.addEventListener('change', (e) => { if (e.target.files.length) { importExcel(e.target.files[0]); excelFileInput.value = ''; } });
+            importExcelBtn.addEventListener('click', triggerFileImport);
             genExcelBtn.addEventListener('click', handleGenerateExcel);
             genPdfBtn.addEventListener('click', handleGeneratePDF);
             mainTitleInput.addEventListener('input', () => {
@@ -1414,11 +1410,8 @@
             document.getElementById('appContainer').style.display = 'block';
         }
 
-        // 等待所有脚本加载完成
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                setTimeout(init, 100);
-            });
+            document.addEventListener('DOMContentLoaded', () => { setTimeout(init, 100); });
         } else {
             setTimeout(init, 100);
         }
