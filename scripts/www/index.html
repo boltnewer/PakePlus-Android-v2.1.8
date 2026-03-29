@@ -63,7 +63,6 @@
             border-radius: 20px;
             box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
             overflow: hidden;
-            display: none;
         }
 
         .card-inner {
@@ -560,6 +559,47 @@
             color: #334155;
         }
 
+        /* 试用提示弹窗 */
+        .trial-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20000;
+        }
+        .trial-card {
+            background: white;
+            border-radius: 28px;
+            padding: 24px;
+            max-width: 300px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        .trial-card h3 {
+            margin-bottom: 12px;
+            font-size: 1.3rem;
+        }
+        .trial-card p {
+            margin-bottom: 20px;
+            color: #475569;
+            line-height: 1.4;
+        }
+        .trial-card button {
+            background: #3b82f6;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 40px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
         @media (max-width: 480px) {
             .card-inner { padding: 10px; }
             .header-item input[type="text"] { min-width: 80px; padding: 5px 6px; }
@@ -581,7 +621,7 @@
         <div class="loading-text">正在加载...</div>
     </div>
 
-    <div class="glass-card" id="appContainer">
+    <div class="glass-card" id="appContainer" style="display: none;">
         <div class="card-inner">
             <div class="hero-title">📊 简易表格</div>
             <div class="top-bar">
@@ -632,8 +672,8 @@
                     <div class="image-preview-container" id="imagePreviewContainer"></div>
                 </div>
                 <div class="action-group">
-                    <button id="genExcelBtn" class="btn btn-success">📎 生成并打开 Excel</button>
-                    <button id="genPdfBtn" class="btn btn-primary" style="background: #4b5563;">📑 生成并打开 PDF</button>
+                    <button id="genExcelBtn" class="btn btn-success">📎 生成并分享 Excel</button>
+                    <button id="genPdfBtn" class="btn btn-primary" style="background: #4b5563;">📑 生成并分享 PDF</button>
                 </div>
             </div>
         </div>
@@ -657,6 +697,139 @@
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
     <script>
+        // ==================== 试用限制模块 ====================
+        const TRIAL_KEY = "app_trial_data_v2";
+        const DEVICE_HASH_KEY = "device_hash";
+
+        // 生成设备唯一标识（基于 userAgent、屏幕尺寸等）
+        function generateDeviceHash() {
+            const ua = navigator.userAgent;
+            const screen = `${screen.width}x${screen.height}x${screen.colorDepth}`;
+            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const platform = navigator.platform;
+            const hashBase = `${ua}|${screen}|${timezone}|${platform}`;
+            // 简单哈希
+            let hash = 0;
+            for (let i = 0; i < hashBase.length; i++) {
+                hash = ((hash << 5) - hash) + hashBase.charCodeAt(i);
+                hash |= 0;
+            }
+            return Math.abs(hash).toString(16);
+        }
+
+        // 加密/混淆函数（简单的 XOR + Base64，避免直接可见）
+        function encrypt(data) {
+            const key = generateDeviceHash();
+            let result = "";
+            for (let i = 0; i < data.length; i++) {
+                const charCode = data.charCodeAt(i) ^ key.charCodeAt(i % key.length);
+                result += String.fromCharCode(charCode);
+            }
+            return btoa(result);
+        }
+
+        function decrypt(encrypted) {
+            try {
+                const decoded = atob(encrypted);
+                const key = generateDeviceHash();
+                let result = "";
+                for (let i = 0; i < decoded.length; i++) {
+                    const charCode = decoded.charCodeAt(i) ^ key.charCodeAt(i % key.length);
+                    result += String.fromCharCode(charCode);
+                }
+                return result;
+            } catch (e) {
+                return "";
+            }
+        }
+
+        // 初始化试用数据
+        function initTrial() {
+            const stored = localStorage.getItem(TRIAL_KEY);
+            if (!stored) {
+                // 首次运行，记录当前时间戳
+                const startTime = Date.now();
+                const data = { start: startTime, lastCheck: startTime };
+                const json = JSON.stringify(data);
+                localStorage.setItem(TRIAL_KEY, encrypt(json));
+                return { days: 0, isExpired: false };
+            } else {
+                const decrypted = decrypt(stored);
+                let data;
+                try {
+                    data = JSON.parse(decrypted);
+                } catch (e) {
+                    // 数据损坏，重置
+                    const startTime = Date.now();
+                    data = { start: startTime, lastCheck: startTime };
+                    localStorage.setItem(TRIAL_KEY, encrypt(JSON.stringify(data)));
+                    return { days: 0, isExpired: false };
+                }
+                const start = data.start;
+                const now = Date.now();
+                const days = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+                return { days: days, isExpired: days > 30 };
+            }
+        }
+
+        // 显示试用提示
+        function showTrialPrompt(days, isExpired) {
+            const overlay = document.createElement('div');
+            overlay.className = 'trial-overlay';
+            const card = document.createElement('div');
+            card.className = 'trial-card';
+            if (isExpired) {
+                card.innerHTML = `
+                    <h3>⏰ 试用已过期</h3>
+                    <p>您的30天试用期已结束，请购买正式版继续使用。</p>
+                    <button id="trialCloseBtn">确定</button>
+                `;
+            } else if (days >= 25) {
+                card.innerHTML = `
+                    <h3>⚠️ 试用即将到期</h3>
+                    <p>您已使用 ${days} 天，剩余 ${30-days} 天试用期。请及时购买正式版。</p>
+                    <button id="trialCloseBtn">我知道了</button>
+                `;
+            } else {
+                return; // 不需要提示
+            }
+            overlay.appendChild(card);
+            document.body.appendChild(overlay);
+            const btn = document.getElementById('trialCloseBtn');
+            btn.onclick = () => {
+                overlay.remove();
+                if (isExpired) {
+                    // 禁止进入主界面
+                    document.getElementById('appContainer').style.display = 'none';
+                    document.getElementById('loading').style.display = 'none';
+                    const expiredMsg = document.createElement('div');
+                    expiredMsg.style.position = 'fixed';
+                    expiredMsg.style.top = '50%';
+                    expiredMsg.style.left = '50%';
+                    expiredMsg.style.transform = 'translate(-50%, -50%)';
+                    expiredMsg.style.background = 'white';
+                    expiredMsg.style.padding = '20px';
+                    expiredMsg.style.borderRadius = '20px';
+                    expiredMsg.style.textAlign = 'center';
+                    expiredMsg.innerHTML = '<h2>试用已过期</h2><p>请购买正式版</p>';
+                    document.body.appendChild(expiredMsg);
+                }
+            };
+        }
+
+        // 运行试用检查，返回是否允许继续
+        function checkTrial() {
+            const { days, isExpired } = initTrial();
+            if (isExpired) {
+                showTrialPrompt(days, true);
+                return false;
+            } else if (days >= 25) {
+                showTrialPrompt(days, false);
+            }
+            return true;
+        }
+
+        // ==================== 主程序 ====================
         let appData = {
             mainTitle: "项目数据统计表",
             maker: "",
@@ -677,7 +850,7 @@
         let genExcelBtn, genPdfBtn, uploadImageBtn, deleteImageBtn, imagePreviewContainer;
         let modal, modalInput, currentEditInput;
 
-        // ---------- 辅助函数 ----------
+        // ==================== 辅助函数（与之前相同，略） ====================
         function updateImagePreview() {
             imagePreviewContainer.innerHTML = '';
             if (attachedImage) {
@@ -1091,7 +1264,14 @@
             return '';
         }
 
+        // 导入 Excel（仅允许 .xlsx, .xls, .csv）
         function importExcel(file) {
+            const fileName = file.name;
+            const ext = fileName.split('.').pop().toLowerCase();
+            if (!['xlsx', 'xls', 'csv'].includes(ext)) {
+                alert("请选择 Excel 表格文件（.xlsx, .xls, .csv）");
+                return;
+            }
             const reader = new FileReader();
             reader.onload = function(e) {
                 const data = new Uint8Array(e.target.result);
@@ -1271,43 +1451,46 @@
             } catch (err) { document.body.removeChild(container); throw err; }
         }
 
-        function downloadFile(blob, fileName) {
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            link.href = url;
-            link.download = fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
+        async function shareFile(blob, fileName, mimeType) {
+            if (!navigator.share) {
+                alert("当前浏览器不支持分享功能，请升级或使用其他方式");
+                return false;
+            }
+            try {
+                const file = new File([blob], fileName, { type: mimeType });
+                await navigator.share({
+                    title: appData.mainTitle,
+                    text: `分享表格: ${appData.mainTitle}`,
+                    files: [file]
+                });
+                return true;
+            } catch (err) {
+                console.log("分享失败:", err);
+                if (err.name !== 'AbortError') {
+                    alert("分享失败，请检查系统分享设置");
+                }
+                return false;
+            }
         }
 
-        // 新功能：生成并打开 Excel（下载）
         async function handleGenerateExcel() {
-            const toast = showTempToast("生成Excel...");
+            const toast = showTempToast("正在生成 Excel...");
             try {
                 const blob = await generateExcelWithImage();
-                downloadFile(blob, `${appData.mainTitle.replace(/[\\/:*?"<>|]/g, '')}_表格.xlsx`);
-                toast(); // 关闭提示
-                showTempToast("已下载，请在文件管理中查看");
+                await shareFile(blob, `${appData.mainTitle.replace(/[\\/:*?"<>|]/g, '')}_表格.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
             } catch (err) {
                 console.error(err);
                 alert("生成失败：" + err.message);
             } finally { if(toast) toast(); }
         }
 
-        // 新功能：生成并打开 PDF（新窗口预览）
         async function handleGeneratePDF() {
-            const toast = showTempToast("生成PDF...");
+            const toast = showTempToast("正在生成 PDF...");
             try {
                 const blob = await generatePDFWithImage();
-                const url = URL.createObjectURL(blob);
-                // 在新窗口打开 PDF（大多数浏览器会直接预览）
-                window.open(url, '_blank');
-                setTimeout(() => URL.revokeObjectURL(url), 60000);
-                toast();
-            } catch (err) { 
-                alert("PDF生成失败：" + err.message);
+                await shareFile(blob, `${appData.mainTitle.replace(/[\\/:*?"<>|]/g, '')}_报告.pdf`, 'application/pdf');
+            } catch (err) {
+                alert("生成失败：" + err.message);
             } finally { if(toast) toast(); }
         }
 
@@ -1328,7 +1511,6 @@
             return () => { if (toast && toast.remove) toast.remove(); };
         }
 
-        // 导入触发函数（动态创建 file input）
         function triggerFileImport() {
             const fileInput = document.createElement('input');
             fileInput.type = 'file';
@@ -1344,7 +1526,15 @@
             fileInput.click();
         }
 
-        function init() {
+        // ==================== 初始化主程序（包含试用检查） ====================
+        function initMain() {
+            // 先进行试用检查，如果过期则阻止显示主界面
+            if (!checkTrial()) {
+                // 试用已过期，不初始化主程序
+                return;
+            }
+
+            // 获取 DOM 元素
             mainTitleInput = document.getElementById('mainTitleInput');
             makerInput = document.getElementById('makerInput');
             headersListContainer = document.getElementById('headersListContainer');
@@ -1364,6 +1554,7 @@
             modal = document.getElementById('editModal');
             modalInput = document.getElementById('modalInput');
 
+            // 绑定事件
             makerInput.addEventListener('input', () => {
                 appData.maker = makerInput.value;
                 if (dataSection && !dataSection.classList.contains('hidden-section')) displayMakerSpan.innerText = appData.maker || '—';
@@ -1406,14 +1597,16 @@
             updateFormulaValues();
             updateImagePreview();
 
-            document.getElementById('loading').style.display = 'none';
+            // 显示主界面
             document.getElementById('appContainer').style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
         }
 
+        // 等待所有脚本加载完成
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => { setTimeout(init, 100); });
+            document.addEventListener('DOMContentLoaded', () => { setTimeout(initMain, 200); });
         } else {
-            setTimeout(init, 100);
+            setTimeout(initMain, 200);
         }
     </script>
 </body>
